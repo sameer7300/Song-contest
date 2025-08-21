@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Song Upload Confirmation - AI Song Contest</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            color: #2c5aa0;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .success-icon {
+            font-size: 48px;
+            color: #28a745;
+            margin-bottom: 20px;
+        }
+        .song-details {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #2c5aa0;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🎵 AI Song Contest</div>
+            <div class="success-icon">✅</div>
+            <h2>Song Upload Successful!</h2>
+        </div>
+        
+        <p>Hello {{ user.get_display_name }},</p>
+        
+        <p>Great news! Your song has been successfully uploaded to the National AI Song Contest platform.</p>
+        
+        <div class="song-details">
+            <h4>📀 Song Details:</h4>
+            <ul>
+                <li><strong>Title:</strong> {{ song.title }}</li>
+                <li><strong>Genre:</strong> {{ song.get_genre_display }}</li>
+                <li><strong>Language:</strong> {{ song.get_language_display }}</li>
+                <li><strong>AI Tool Used:</strong> {{ song.ai_tool_used }}</li>
+                <li><strong>Submitted:</strong> {{ song.submitted_at|date:"F d, Y at g:i A" }}</li>
+            </ul>
+        </div>
+        
+        <p><strong>What happens next?</strong></p>
+        <ul>
+            <li>🔍 Your song will be reviewed by our team</li>
+            <li>🌟 Once approved, it will be visible to all participants</li>
+            <li>🗳️ Other users can listen and vote on your song</li>
+            <li>🏆 Winners will be announced based on ratings and creativity</li>
+        </ul>
+        
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="http://127.0.0.1:8000/song/{{ song.id }}/" class="btn">View Your Song</a>
+        </div>
+        
+        <p><strong>Contest Theme:</strong> "Ban Autonomous Weapons Systems (AWS) – Stop Killer Robots"</p>
+        <p>Remember, AI should serve humanity, not kill. Your voice matters in this important cause!</p>
+        
+        <p>Best of luck in the contest!</p>
+        
+        <p>Best regards,<br>
+        <strong>AI Song Contest Team</strong><br>
+        "Voices for Humanity"</p>
+        
+        <div class="footer">
+            <p>This is an automated message from the National AI Song Contest.<br>
+            Organized by SPADO in collaboration with KRC Youth Network</p>
+            <p>If you have any questions, please contact us at {{ admin_email }}</p>
+        </div>
+    </div>
+</body>
+</html>

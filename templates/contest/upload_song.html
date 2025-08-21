@@ -1,0 +1,329 @@
+{% extends 'base.html' %}
+
+{% block title %}Upload Song - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header {% if can_submit %}bg-primary{% else %}bg-warning{% endif %} text-white">
+                    <h2 class="mb-0">
+                        <i class="fas fa-{% if can_submit %}upload{% else %}clock{% endif %} me-2"></i>
+                        {% if can_submit %}Upload Your AI Song{% else %}Song Submission Status{% endif %}
+                    </h2>
+                </div>
+                <div class="card-body">
+                    {% if not can_submit %}
+                        <!-- Phase Status Message -->
+                        <div class="alert alert-{% if current_phase.status == 'judging' %}warning{% elif current_phase.status == 'winner_announced' %}success{% else %}info{% endif %} text-center">
+                            <h4 class="alert-heading">
+                                <i class="fas fa-{% if current_phase.status == 'judging' %}gavel{% elif current_phase.status == 'winner_announced' %}trophy{% else %}info-circle{% endif %} me-2"></i>
+                                {{ current_phase.get_status_display }}
+                            </h4>
+                            <p class="mb-3">{{ phase_message }}</p>
+                            {% if current_phase.description %}
+                                <p class="mb-3"><em>{{ current_phase.description }}</em></p>
+                            {% endif %}
+                            <hr>
+                            <div class="d-flex justify-content-center gap-3">
+                                <a href="{% url 'contest:home' %}" class="btn btn-primary">
+                                    <i class="fas fa-home me-2"></i>Go to Home
+                                </a>
+                                {% if current_phase.status == 'winner_announced' %}
+                                <a href="{% url 'contest:winners' %}" class="btn btn-success">
+                                    <i class="fas fa-trophy me-2"></i>View Winners
+                                </a>
+                                {% elif current_phase.status == 'judging' %}
+                                <a href="{% url 'contest:browse_songs' %}" class="btn btn-info">
+                                    <i class="fas fa-headphones me-2"></i>Browse Submissions
+                                </a>
+                                {% endif %}
+                                <a href="{% url 'contest:dashboard' %}" class="btn btn-outline-primary">
+                                    <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                                </a>
+                            </div>
+                        </div>
+                    {% else %}
+                        <!-- Normal Upload Form -->
+                        <div class="alert alert-info">
+                            <h5><i class="fas fa-info-circle me-2"></i>Contest Theme</h5>
+                            <p class="mb-0">
+                                <strong>Ban Autonomous Weapons Systems (AWS) – Stop Killer Robots</strong><br>
+                                Create a song that advocates for peace and responsible AI use.
+                            </p>
+                        </div>
+
+                        <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.title.id_for_label }}" class="form-label">
+                                    <i class="fas fa-music me-1"></i>Song Title *
+                                </label>
+                                {{ form.title }}
+                                {% if form.title.errors %}
+                                <div class="text-danger small">{{ form.title.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.language.id_for_label }}" class="form-label">
+                                    <i class="fas fa-language me-1"></i>Language *
+                                </label>
+                                {{ form.language }}
+                                {% if form.language.errors %}
+                                <div class="text-danger small">{{ form.language.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.genre.id_for_label }}" class="form-label">
+                                    <i class="fas fa-music me-1"></i>Genre *
+                                </label>
+                                {{ form.genre }}
+                                {% if form.genre.errors %}
+                                <div class="text-danger small">{{ form.genre.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.category.id_for_label }}" class="form-label">
+                                    <i class="fas fa-tag me-1"></i>Category
+                                </label>
+                                {{ form.category }}
+                                {% if form.category.errors %}
+                                <div class="text-danger small">{{ form.category.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        {% if form.tags.field.queryset.exists %}
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-tags me-1"></i>Tags
+                            </label>
+                            <div class="row">
+                                {% for tag in form.tags.field.queryset %}
+                                <div class="col-md-4 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="tags" value="{{ tag.id }}" id="tag_{{ tag.id }}">
+                                        <label class="form-check-label" for="tag_{{ tag.id }}">
+                                            <span class="badge" style="background-color: {{ tag.color }};">{{ tag.name }}</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% if form.tags.errors %}
+                            <div class="text-danger small">{{ form.tags.errors }}</div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label for="{{ form.ai_tool_used.id_for_label }}" class="form-label">
+                                <i class="fas fa-robot me-1"></i>AI Tool Used *
+                            </label>
+                            {{ form.ai_tool_used }}
+                            <div class="form-text">e.g., Suno AI, Boomy, Soundraw, AIVA, etc.</div>
+                            {% if form.ai_tool_used.errors %}
+                            <div class="text-danger small">{{ form.ai_tool_used.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">
+                                <i class="fas fa-align-left me-1"></i>Description
+                            </label>
+                            {{ form.description }}
+                            <div class="form-text">Describe your song and its message about stopping autonomous weapons</div>
+                            {% if form.description.errors %}
+                            <div class="text-danger small">{{ form.description.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.audio_file.id_for_label }}" class="form-label">
+                                    <i class="fas fa-file-audio me-1"></i>Audio File *
+                                </label>
+                                <div class="upload-area" onclick="document.getElementById('{{ form.audio_file.id_for_label }}').click();" style="cursor: pointer; border: 2px dashed #dee2e6; border-radius: 8px; padding: 20px; text-align: center; background-color: #f8f9fa; transition: all 0.3s ease;">
+                                    <i class="fas fa-cloud-upload-alt text-muted mb-2" style="font-size: 2rem;"></i>
+                                    <p class="text-muted mb-2">Click to upload your song (.mp3 or .wav)</p>
+                                    <div style="position: relative; overflow: hidden; display: inline-block;">
+                                        {{ form.audio_file }}
+                                        <span id="audio-file-name" class="text-primary fw-bold"></span>
+                                    </div>
+                                    <small class="text-muted d-block">Max size: 50MB | Duration: 1-3 minutes</small>
+                                </div>
+                                {% if form.audio_file.errors %}
+                                <div class="text-danger small">{{ form.audio_file.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.lyrics_file.id_for_label }}" class="form-label">
+                                    <i class="fas fa-file-text me-1"></i>Lyrics File *
+                                </label>
+                                <div class="upload-area" onclick="document.getElementById('{{ form.lyrics_file.id_for_label }}').click();" style="cursor: pointer; border: 2px dashed #dee2e6; border-radius: 8px; padding: 20px; text-align: center; background-color: #f8f9fa; transition: all 0.3s ease;">
+                                    <i class="fas fa-file-alt text-muted mb-2" style="font-size: 2rem;"></i>
+                                    <p class="text-muted mb-2">Click to upload your lyrics</p>
+                                    <div style="position: relative; overflow: hidden; display: inline-block;">
+                                        {{ form.lyrics_file }}
+                                        <span id="lyrics-file-name" class="text-primary fw-bold"></span>
+                                    </div>
+                                    <small class="text-muted d-block">Supported: .txt, .pdf, .doc, .docx</small>
+                                </div>
+                                {% if form.lyrics_file.errors %}
+                                <div class="text-danger small">{{ form.lyrics_file.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <h6><i class="fas fa-exclamation-triangle me-2"></i>Important Reminders</h6>
+                            <ul class="mb-0">
+                                <li>Lyrics must be original (no plagiarism)</li>
+                                <li>Song must be 1-3 minutes long</li>
+                                <li>Must be created using AI music tools</li>
+                                <li>Theme: Ban Autonomous Weapons Systems</li>
+                            </ul>
+                        </div>
+
+                        <div class="d-flex gap-3">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-upload me-2"></i>Submit Song
+                            </button>
+                            <a href="{% url 'contest:dashboard' %}" class="btn btn-outline-secondary btn-lg">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                            </a>
+                        </div>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // File input styling and functionality
+    const audioInput = document.getElementById('{{ form.audio_file.id_for_label }}');
+    const lyricsInput = document.getElementById('{{ form.lyrics_file.id_for_label }}');
+    
+    // Hide the actual file inputs
+    if (audioInput) {
+        audioInput.style.position = 'absolute';
+        audioInput.style.opacity = '0';
+        audioInput.style.width = '100%';
+        audioInput.style.height = '100%';
+        audioInput.style.cursor = 'pointer';
+        
+        audioInput.addEventListener('change', function(e) {
+            const fileName = e.target.files[0] ? e.target.files[0].name : '';
+            const fileNameSpan = document.getElementById('audio-file-name');
+            const uploadArea = audioInput.closest('.upload-area');
+            
+            if (fileName) {
+                fileNameSpan.textContent = fileName;
+                uploadArea.style.borderColor = '#28a745';
+                uploadArea.style.backgroundColor = '#d4edda';
+                uploadArea.querySelector('p').textContent = 'Audio file selected:';
+            } else {
+                fileNameSpan.textContent = '';
+                uploadArea.style.borderColor = '#dee2e6';
+                uploadArea.style.backgroundColor = '#f8f9fa';
+                uploadArea.querySelector('p').textContent = 'Click to upload your song (.mp3 or .wav)';
+            }
+        });
+    }
+    
+    if (lyricsInput) {
+        lyricsInput.style.position = 'absolute';
+        lyricsInput.style.opacity = '0';
+        lyricsInput.style.width = '100%';
+        lyricsInput.style.height = '100%';
+        lyricsInput.style.cursor = 'pointer';
+        
+        lyricsInput.addEventListener('change', function(e) {
+            const fileName = e.target.files[0] ? e.target.files[0].name : '';
+            const fileNameSpan = document.getElementById('lyrics-file-name');
+            const uploadArea = lyricsInput.closest('.upload-area');
+            
+            if (fileName) {
+                fileNameSpan.textContent = fileName;
+                uploadArea.style.borderColor = '#28a745';
+                uploadArea.style.backgroundColor = '#d4edda';
+                uploadArea.querySelector('p').textContent = 'Lyrics file selected:';
+            } else {
+                fileNameSpan.textContent = '';
+                uploadArea.style.borderColor = '#dee2e6';
+                uploadArea.style.backgroundColor = '#f8f9fa';
+                uploadArea.querySelector('p').textContent = 'Click to upload your lyrics';
+            }
+        });
+    }
+    
+    // Add hover effects
+    document.querySelectorAll('.upload-area').forEach(area => {
+        area.addEventListener('mouseenter', function() {
+            if (!this.querySelector('input[type="file"]').files.length) {
+                this.style.borderColor = '#007bff';
+                this.style.backgroundColor = '#e3f2fd';
+            }
+        });
+        
+        area.addEventListener('mouseleave', function() {
+            if (!this.querySelector('input[type="file"]').files.length) {
+                this.style.borderColor = '#dee2e6';
+                this.style.backgroundColor = '#f8f9fa';
+            }
+        });
+    });
+    
+    // Form validation
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const audioFile = audioInput ? audioInput.files[0] : null;
+            const lyricsFile = lyricsInput ? lyricsInput.files[0] : null;
+            
+            if (!audioFile) {
+                e.preventDefault();
+                alert('Please select an audio file.');
+                audioInput.closest('.upload-area').scrollIntoView();
+                return false;
+            }
+            
+            if (!lyricsFile) {
+                e.preventDefault();
+                alert('Please select a lyrics file.');
+                lyricsInput.closest('.upload-area').scrollIntoView();
+                return false;
+            }
+            
+            // Check file sizes
+            if (audioFile.size > 50 * 1024 * 1024) { // 50MB
+                e.preventDefault();
+                alert('Audio file is too large. Maximum size is 50MB.');
+                return false;
+            }
+            
+            // Show loading state
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Uploading...';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

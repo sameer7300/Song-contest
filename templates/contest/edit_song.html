@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Song - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>Edit Song
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h5><i class="fas fa-info-circle me-2"></i>Edit Your Song</h5>
+                        <p class="mb-0">
+                            You can update your song details, but audio and lyrics files cannot be changed once uploaded.
+                        </p>
+                    </div>
+
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.title.id_for_label }}" class="form-label">
+                                    <i class="fas fa-music me-1"></i>Song Title *
+                                </label>
+                                {{ form.title }}
+                                {% if form.title.errors %}
+                                <div class="text-danger small">{{ form.title.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.language.id_for_label }}" class="form-label">
+                                    <i class="fas fa-language me-1"></i>Language *
+                                </label>
+                                {{ form.language }}
+                                {% if form.language.errors %}
+                                <div class="text-danger small">{{ form.language.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.genre.id_for_label }}" class="form-label">
+                                    <i class="fas fa-music me-1"></i>Genre *
+                                </label>
+                                {{ form.genre }}
+                                {% if form.genre.errors %}
+                                <div class="text-danger small">{{ form.genre.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.category.id_for_label }}" class="form-label">
+                                    <i class="fas fa-tag me-1"></i>Category
+                                </label>
+                                {{ form.category }}
+                                {% if form.category.errors %}
+                                <div class="text-danger small">{{ form.category.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        {% if form.tags.field.queryset.exists %}
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-tags me-1"></i>Tags
+                            </label>
+                            <div class="row">
+                                {% for tag in form.tags.field.queryset %}
+                                <div class="col-md-4 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="tags" value="{{ tag.id }}" id="tag_{{ tag.id }}" 
+                                               {% if tag in song.tags.all %}checked{% endif %}>
+                                        <label class="form-check-label" for="tag_{{ tag.id }}">
+                                            <span class="badge" style="--tag-color: {{ tag.color|default:'#6c757d' }}; background-color: var(--tag-color);">{{ tag.name }}</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% if form.tags.errors %}
+                            <div class="text-danger small">{{ form.tags.errors }}</div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label for="{{ form.ai_tool_used.id_for_label }}" class="form-label">
+                                <i class="fas fa-robot me-1"></i>AI Tool Used *
+                            </label>
+                            {{ form.ai_tool_used }}
+                            <div class="form-text">e.g., Suno AI, Boomy, Soundraw, AIVA, etc.</div>
+                            {% if form.ai_tool_used.errors %}
+                            <div class="text-danger small">{{ form.ai_tool_used.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">
+                                <i class="fas fa-align-left me-1"></i>Description
+                            </label>
+                            {{ form.description }}
+                            <div class="form-text">Describe your song and its message</div>
+                            {% if form.description.errors %}
+                            <div class="text-danger small">{{ form.description.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Current Files Display -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h6 class="text-muted">Current Audio File</h6>
+                                {% if song.audio_file %}
+                                <div class="border rounded p-3 bg-light">
+                                    <i class="fas fa-file-audio text-primary me-2"></i>
+                                    <a href="{{ song.audio_file.url }}" target="_blank" class="text-decoration-none">
+                                        {{ song.audio_file.name|slice:"12:" }}
+                                    </a>
+                                    {% if song.file_size_mb %}
+                                    <small class="text-muted d-block">{{ song.file_size_mb|floatformat:1 }} MB</small>
+                                    {% endif %}
+                                </div>
+                                {% else %}
+                                <p class="text-muted">No audio file uploaded</p>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <h6 class="text-muted">Current Lyrics File</h6>
+                                {% if song.lyrics_file %}
+                                <div class="border rounded p-3 bg-light">
+                                    <i class="fas fa-file-text text-info me-2"></i>
+                                    <a href="{{ song.lyrics_file.url }}" target="_blank" class="text-decoration-none">
+                                        {{ song.lyrics_file.name|slice:"13:" }}
+                                    </a>
+                                </div>
+                                {% else %}
+                                <p class="text-muted">No lyrics file uploaded</p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <h6><i class="fas fa-exclamation-triangle me-2"></i>Important Notes</h6>
+                            <ul class="mb-0">
+                                <li>Audio and lyrics files cannot be changed after upload</li>
+                                <li>Only song details and metadata can be edited</li>
+                                <li>Changes will be saved immediately</li>
+                            </ul>
+                        </div>
+
+                        <div class="d-flex gap-3">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save me-2"></i>Save Changes
+                            </button>
+                            <a href="{% url 'contest:dashboard' %}" class="btn btn-outline-secondary btn-lg">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                            </a>
+                            <a href="{% url 'contest:song_detail' song.id %}" class="btn btn-outline-info btn-lg">
+                                <i class="fas fa-eye me-2"></i>View Song
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

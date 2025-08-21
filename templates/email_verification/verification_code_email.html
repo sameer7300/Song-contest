@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verification - AI Song Contest</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            color: #2c5aa0;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .verification-code {
+            background: #f8f9fa;
+            border: 2px dashed #2c5aa0;
+            padding: 20px;
+            text-align: center;
+            margin: 30px 0;
+            border-radius: 10px;
+        }
+        .code {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2c5aa0;
+            letter-spacing: 8px;
+            font-family: 'Courier New', monospace;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🎵 AI Song Contest</div>
+            <h2>Email Verification Required</h2>
+        </div>
+        
+        <p>Hello {{ user.get_display_name }},</p>
+        
+        <p>Thank you for {% if verification_type == 'registration' %}registering with{% else %}logging into{% endif %} the National AI Song Contest platform!</p>
+        
+        <p>To complete your {% if verification_type == 'registration' %}registration{% else %}login{% endif %}, please use the verification code below:</p>
+        
+        <div class="verification-code">
+            <div class="code">{{ code }}</div>
+            <p style="margin: 10px 0 0 0; color: #666;">Enter this code on the verification page</p>
+        </div>
+        
+        <div class="warning">
+            <strong>⚠️ Important:</strong>
+            <ul style="margin: 10px 0 0 20px;">
+                <li>This code will expire in {{ expires_minutes }} minutes</li>
+                <li>Do not share this code with anyone</li>
+                <li>If you didn't request this code, please ignore this email</li>
+            </ul>
+        </div>
+        
+        <p>If you're having trouble with verification, you can request a new code on the verification page.</p>
+        
+        <p>Best regards,<br>
+        <strong>AI Song Contest Team</strong><br>
+        "Voices for Humanity"</p>
+        
+        <div class="footer">
+            <p>This is an automated message from the National AI Song Contest.<br>
+            Organized by SPADO in collaboration with KRC Youth Network</p>
+            <p>If you have any questions, please contact us at {{ settings.ADMIN_EMAIL }}</p>
+        </div>
+    </div>
+</body>
+</html>

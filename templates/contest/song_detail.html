@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ song.title }} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h1 class="card-title">{{ song.title }}</h1>
+                        <div>
+                            {% if song.is_winner %}
+                            <span class="badge bg-warning text-dark me-2">
+                                <i class="fas fa-crown me-1"></i>Winner
+                            </span>
+                            {% endif %}
+                            {% if song.is_featured %}
+                            <span class="badge bg-info">
+                                <i class="fas fa-star me-1"></i>Featured
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Stats -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <small class="text-muted">
+                                <i class="fas fa-eye me-1"></i>{{ song.view_count }} views
+                            </small>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-2">
+                                <span class="badge bg-secondary me-1">{{ song.get_language_display }}</span>
+                                <span class="badge bg-secondary me-1">{{ song.get_genre_display }}</span>
+                                {% if song.category %}
+                                    <span class="badge bg-outline-primary">{{ song.category.name }}</span>
+                                {% endif %}
+                            </div>
+                            {% if song.tags.exists %}
+                                <div>
+                                    {% for tag in song.tags.all %}
+                                        <span class="badge me-1" style="background-color: {{ tag.color }};">{{ tag.name }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Artist Information</h6>
+                            <p><strong>Artist:</strong> {{ song.user.get_display_name }}</p>
+                            <p><strong>City:</strong> {{ song.user.city|default:"Not specified" }}</p>
+                            {% if song.user.age %}
+                            <p><strong>Age:</strong> {{ song.user.age }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Song Details</h6>
+                            <p><strong>AI Tool:</strong> {{ song.ai_tool_used }}</p>
+                            <p><strong>Submitted:</strong> {{ song.submitted_at|date:"F d, Y" }}</p>
+                            {% if song.file_size_mb %}
+                            <p><strong>File Size:</strong> {{ song.file_size_mb|floatformat:1 }} MB</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if song.description %}
+                    <div class="mb-4">
+                        <h6 class="text-muted">Description</h6>
+                        <p>{{ song.description|linebreaks }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Audio Player -->
+                    <div class="mb-4">
+                        <h6 class="text-muted">Listen to the Song</h6>
+                        <audio controls class="w-100" style="max-width: 500px;">
+                            <source src="{{ song.audio_file.url }}" type="audio/mpeg">
+                            Your browser does not support the audio element.
+                        </audio>
+                    </div>
+                    
+                    <!-- Voting Section -->
+                    {% if user.is_authenticated and user != song.user %}
+                    <div class="mb-4">
+                        <h6 class="text-muted">Rate this Song</h6>
+                        <form action="{% url 'contest:vote_song' song.id %}" method="post" class="d-flex align-items-center gap-3">
+                            {% csrf_token %}
+                            <div class="btn-group" role="group" aria-label="Rating">
+                                {% for i in "12345" %}
+                                <input type="radio" class="btn-check" name="rating" id="rating{{ forloop.counter }}" value="{{ forloop.counter }}" {% if user_vote and user_vote.rating == forloop.counter %}checked{% endif %}>
+                                <label class="btn btn-outline-warning" for="rating{{ forloop.counter }}">
+                                    <i class="fas fa-star"></i> {{ forloop.counter }}
+                                </label>
+                                {% endfor %}
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                {% if user_vote %}Update Vote{% else %}Submit Vote{% endif %}
+                            </button>
+                        </form>
+                        {% if user_vote %}
+                        <small class="text-muted">You rated this song {{ user_vote.rating }} star{{ user_vote.rating|pluralize }}</small>
+                        {% endif %}
+                    </div>
+                    {% elif user == song.user %}
+                    <div class="mb-4">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>You cannot vote on your own song.
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="mb-4">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-sign-in-alt me-2"></i>Please <a href="{% url 'accounts:login' %}">login</a> to rate this song.
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Comments Section -->
+                    {% if user.is_authenticated %}
+                    <div class="mb-4">
+                        <h6 class="text-muted">Add a Comment</h6>
+                        <form action="{% url 'contest:add_comment' song.id %}" method="post">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <textarea name="content" class="form-control" rows="3" placeholder="Share your thoughts about this song..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-outline-primary">Post Comment</button>
+                        </form>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Display Comments -->
+                    {% if comments %}
+                    <div class="mb-4">
+                        <h6 class="text-muted">Comments</h6>
+                        {% for comment in comments %}
+                        <div class="border-start border-primary ps-3 mb-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <strong>{{ comment.user.get_display_name }}</strong>
+                                <small class="text-muted">{{ comment.created_at|date:"M d, Y" }}</small>
+                            </div>
+                            <p class="mb-0">{{ comment.content|linebreaks }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Lyrics Download -->
+                    {% if song.lyrics_file %}
+                    <div class="mb-4">
+                        <h6 class="text-muted">Lyrics</h6>
+                        <a href="{{ song.lyrics_file.url }}" class="btn btn-outline-primary" download>
+                            <i class="fas fa-download me-1"></i>Download Lyrics
+                        </a>
+                    </div>
+                    {% endif %}
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'contest:winners' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-left me-1"></i>Back to Winners
+                        </a>
+                        {% if user.is_authenticated and user == song.user %}
+                        <a href="{% url 'contest:edit_song' song.id %}" class="btn btn-success">
+                            <i class="fas fa-edit me-1"></i>Edit Song
+                        </a>
+                        <a href="{% url 'contest:delete_song_request' song.id %}" class="btn btn-danger">
+                            <i class="fas fa-trash me-1"></i>Delete Song
+                        </a>
+                        <a href="{% url 'contest:dashboard' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-tachometer-alt me-1"></i>My Dashboard
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

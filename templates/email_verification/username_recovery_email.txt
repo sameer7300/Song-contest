@@ -1,0 +1,20 @@
+National AI Song Contest - Username Recovery Request
+
+Hello,
+
+You requested to recover your username for your National AI Song Contest account.
+
+Your verification code is: {{ code }}
+
+This code expires in {{ expires_minutes }} minutes.
+
+Enter this code on the username recovery page to verify your identity and retrieve your username.
+
+SECURITY NOTICE: If you didn't request this username recovery, please ignore this email. Your account remains secure.
+
+Best regards,
+The SPADO Team
+
+---
+This is an automated message from the National AI Song Contest platform.
+Powered by SPADO | "Voices for Humanity"

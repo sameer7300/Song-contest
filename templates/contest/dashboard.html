@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12 text-center mb-5">
+            <h1 class="display-4 fw-bold text-gradient fade-in-up">
+                <i class="fas fa-tachometer-alt me-3 music-wave"></i>Your Dashboard
+            </h1>
+            <p class="lead text-muted">Track your contest journey and submissions</p>
+            <a href="{% url 'contest:upload_song' %}" class="btn btn-primary btn-lg hover-lift mt-3">
+                <i class="fas fa-plus me-2"></i>Upload New Song
+            </a>
+        </div>
+    </div>
+
+    <!-- Winner Status -->
+    {% if user_winners %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-success">
+                <h4 class="alert-heading">
+                    <i class="fas fa-trophy me-2"></i>Congratulations! You're a Winner!
+                </h4>
+                <p>Your song(s) have been selected as winners in the contest.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-5">
+        <div class="col-12">
+            <h3 class="mb-3">
+                <i class="fas fa-crown text-warning me-2"></i>Your Winning Songs
+            </h3>
+            <div class="row">
+                {% for winner in user_winners %}
+                <div class="col-lg-6 mb-3">
+                    <div class="card border-warning">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <span class="winner-badge">
+                                    <i class="fas fa-trophy me-1"></i>Winner
+                                </span>
+                                <small class="text-muted">Selected: {{ winner.selected_at|date:"M d, Y" }}</small>
+                            </div>
+                            <h5 class="card-title">{{ winner.song.title }}</h5>
+                            <p class="card-text">
+                                <strong>Language:</strong> {{ winner.song.get_language_display }}<br>
+                                <strong>AI Tool:</strong> {{ winner.song.ai_tool_used }}
+                            </p>
+                            <a href="{% url 'contest:song_detail' winner.song.id %}" class="btn btn-outline-warning btn-sm">
+                                <i class="fas fa-eye me-1"></i>View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Stats Cards -->
+    <div class="row mb-5 g-4">
+        <div class="col-md-4">
+            <div class="card text-center hover-lift glassmorphism h-100">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <i class="fas fa-music text-gradient mb-3" style="font-size: 3rem;"></i>
+                    </div>
+                    <h3 class="card-title display-6 fw-bold text-gradient">{{ total_submissions }}</h3>
+                    <p class="card-text text-muted fw-semibold">Your Submissions</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center hover-lift glassmorphism h-100">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <i class="fas fa-trophy text-warning mb-3 floating" style="font-size: 3rem;"></i>
+                    </div>
+                    <h3 class="card-title display-6 fw-bold text-gradient">{{ user_winners.count }}</h3>
+                    <p class="card-text text-muted fw-semibold">Winning Songs</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center hover-lift glassmorphism h-100">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <i class="fas fa-calendar text-gradient mb-3" style="font-size: 3rem;"></i>
+                    </div>
+                    <h3 class="card-title display-6 fw-bold text-gradient">{{ user.date_joined|date:"M Y" }}</h3>
+                    <p class="card-text text-muted fw-semibold">Member Since</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Your Submissions -->
+    <div class="row">
+        <div class="col-12">
+            <h3 class="mb-4 text-gradient">
+                <i class="fas fa-list me-2"></i>Your Submissions
+            </h3>
+            
+            {% if user_songs %}
+            <div class="row g-4">
+                {% for song in user_songs %}
+                <div class="col-lg-6 mb-4">
+                    <div class="card hover-lift glassmorphism h-100 {% if song.is_winner %}border-warning{% endif %}">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                {% if song.is_winner %}
+                                <span class="winner-badge">
+                                    <i class="fas fa-trophy me-1"></i>Winner
+                                </span>
+                                {% else %}
+                                <span class="badge bg-primary">
+                                    <i class="fas fa-check me-1"></i>Submitted
+                                </span>
+                                {% endif %}
+                                <small class="text-muted">{{ song.submitted_at|date:"M d, Y H:i" }}</small>
+                            </div>
+                            
+                            <h5 class="card-title text-gradient fw-bold">{{ song.title }}</h5>
+                            
+                            <div class="mb-3">
+                                <span class="badge bg-primary me-1">{{ song.get_language_display }}</span>
+                                <span class="badge bg-secondary me-1">{{ song.get_genre_display }}</span>
+                                <span class="badge bg-info">{{ song.ai_tool_used }}</span>
+                            </div>
+                            
+                            {% if song.description %}
+                            <p class="card-text text-muted mb-3">{{ song.description|truncatewords:20 }}</p>
+                            {% endif %}
+                            
+                            <div class="mb-3">
+                                <small class="text-muted d-block">
+                                    <i class="fas fa-eye me-1"></i>{{ song.view_count }} views
+                                    {% if song.file_size_mb %}
+                                    | <i class="fas fa-file me-1"></i>{{ song.file_size_mb|floatformat:1 }} MB
+                                    {% endif %}
+                                </small>
+                            </div>
+                            
+                            <div class="d-flex gap-2 flex-wrap">
+                                <a href="{% url 'contest:song_detail' song.id %}" class="btn btn-primary btn-sm hover-lift">
+                                    <i class="fas fa-eye me-1"></i>View Details
+                                </a>
+                                <a href="{% url 'contest:edit_song' song.id %}" class="btn btn-success btn-sm hover-lift">
+                                    <i class="fas fa-edit me-1"></i>Edit
+                                </a>
+                                <a href="{% url 'contest:delete_song_request' song.id %}" class="btn btn-danger btn-sm hover-lift">
+                                    <i class="fas fa-trash me-1"></i>Delete
+                                </a>
+                                {% if song.audio_file %}
+                                <a href="{{ song.audio_file.url }}" class="btn btn-outline-success btn-sm hover-lift" target="_blank">
+                                    <i class="fas fa-play me-1"></i>Play
+                                </a>
+                                {% endif %}
+                                {% if song.lyrics_file %}
+                                <a href="{{ song.lyrics_file.url }}" class="btn btn-outline-info btn-sm hover-lift" target="_blank">
+                                    <i class="fas fa-file-text me-1"></i>Lyrics
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <div class="card glassmorphism">
+                    <div class="card-body p-5">
+                        <i class="fas fa-music text-muted mb-4 floating" style="font-size: 5rem;"></i>
+                        <h4 class="text-gradient mb-3">No songs uploaded yet</h4>
+                        <p class="text-muted mb-4">Upload your first AI-generated song to participate in the contest!</p>
+                        <a href="{% url 'contest:upload_song' %}" class="btn btn-primary btn-lg hover-lift">
+                            <i class="fas fa-upload me-2"></i>Upload Your First Song
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+</div>
+{% endblock %}

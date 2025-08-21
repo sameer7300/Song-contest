@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Song Deletion Verification - AI Song Contest</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.7;
+            color: #2c3e50;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .email-wrapper {
+            max-width: 650px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            position: relative;
+        }
+        .header {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(255,255,255,0.05) 10px,
+                rgba(255,255,255,0.05) 20px
+            );
+            animation: slide 20s linear infinite;
+        }
+        @keyframes slide {
+            0% { transform: translateX(-50px) translateY(-50px); }
+            100% { transform: translateX(50px) translateY(50px); }
+        }
+        .logo {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 2;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .warning-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 2;
+            animation: pulse 2s infinite;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        .header h2 {
+            font-size: 24px;
+            font-weight: 700;
+            position: relative;
+            z-index: 2;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .greeting {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 25px;
+        }
+        .main-text {
+            font-size: 16px;
+            margin-bottom: 30px;
+            color: #34495e;
+        }
+        .song-details {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 25px 0;
+            border-left: 6px solid #ff6b6b;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            position: relative;
+            overflow: hidden;
+        }
+        .song-details::before {
+            content: '🎵';
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            font-size: 80px;
+            opacity: 0.1;
+            transform: rotate(15deg);
+        }
+        .song-details h4 {
+            color: #ff6b6b;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .song-details ul {
+            list-style: none;
+            margin-left: 0;
+        }
+        .song-details li {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .song-details li:last-child {
+            border-bottom: none;
+        }
+        .song-details strong {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        .verification-section {
+            text-align: center;
+            margin: 35px 0;
+        }
+        .verification-code {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            margin: 25px 0;
+            box-shadow: 0 10px 30px rgba(255, 107, 107, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        .verification-code::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: shine 3s infinite;
+        }
+        @keyframes shine {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        .code {
+            font-size: 42px;
+            font-weight: 900;
+            letter-spacing: 12px;
+            font-family: 'Courier New', monospace;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 2;
+        }
+        .code-subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+            position: relative;
+            z-index: 2;
+        }
+        .warning {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            border: 2px solid #f39c12;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 25px 0;
+            color: #8b4513;
+            box-shadow: 0 4px 15px rgba(243, 156, 18, 0.2);
+            position: relative;
+        }
+        .warning::before {
+            content: '⚠️';
+            position: absolute;
+            top: -5px;
+            right: 15px;
+            font-size: 30px;
+            opacity: 0.3;
+        }
+        .warning strong {
+            color: #d68910;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        .warning ul {
+            margin: 15px 0 0 20px;
+        }
+        .warning li {
+            margin-bottom: 8px;
+            position: relative;
+        }
+        .warning li::before {
+            content: '•';
+            color: #f39c12;
+            font-weight: bold;
+            position: absolute;
+            left: -15px;
+        }
+        .footer {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .footer p {
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+        .footer strong {
+            color: #ecf0f1;
+        }
+        .signature {
+            margin: 30px 0;
+            padding: 20px;
+            background: rgba(52, 152, 219, 0.1);
+            border-radius: 10px;
+            border-left: 4px solid #3498db;
+        }
+        .btn-style {
+            display: inline-block;
+            padding: 12px 25px;
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            margin: 10px 5px;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+            transition: transform 0.2s ease;
+        }
+        .btn-style:hover {
+            transform: translateY(-2px);
+        }
+        @media (max-width: 600px) {
+            .email-wrapper {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            .content {
+                padding: 25px 20px;
+            }
+            .header {
+                padding: 30px 20px;
+            }
+            .code {
+                font-size: 32px;
+                letter-spacing: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-wrapper">
+        <div class="header">
+            <div class="logo">🎵 National AI Song Contest</div>
+            <div class="warning-icon">⚠️</div>
+            <h2>Song Deletion Verification</h2>
+        </div>
+        
+        <div class="content">
+            <div class="greeting">Hello {{ user.get_display_name }},</div>
+            
+            <div class="main-text">
+                You have requested to delete your song from the <strong>National AI Song Contest</strong> platform. 
+                This action is <strong style="color: #e74c3c;">permanent and cannot be undone</strong>.
+            </div>
+            
+            <div class="song-details">
+                <h4>🎵 Song to be deleted:</h4>
+                <ul>
+                    <li><strong>Title:</strong> <span>{{ song.title }}</span></li>
+                    <li><strong>Genre:</strong> <span>{{ song.get_genre_display }}</span></li>
+                    <li><strong>Language:</strong> <span>{{ song.get_language_display }}</span></li>
+                    <li><strong>AI Tool:</strong> <span>{{ song.ai_tool_used }}</span></li>
+                    <li><strong>Submitted:</strong> <span>{{ song.submitted_at|date:"F d, Y at g:i A" }}</span></li>
+                    <li><strong>Views:</strong> <span>{{ song.view_count }}</span></li>
+                    <li><strong>Votes:</strong> <span>{{ song.vote_count }}</span></li>
+                </ul>
+            </div>
+            
+            <div class="verification-section">
+                <p style="margin-bottom: 20px; font-size: 16px; color: #2c3e50;">
+                    To confirm this deletion, please use the verification code below:
+                </p>
+                
+                <div class="verification-code">
+                    <div class="code">{{ verification_code }}</div>
+                    <div class="code-subtitle">Enter this code on the deletion confirmation page</div>
+                </div>
+            </div>
+            
+            <div class="warning">
+                <strong>⚠️ Critical Warning:</strong>
+                <ul>
+                    <li>This verification code will expire in <strong>15 minutes</strong></li>
+                    <li>Once deleted, your song <strong>cannot be recovered</strong></li>
+                    <li>All votes and comments on this song will be <strong>permanently removed</strong></li>
+                    <li>Your contest statistics will be updated accordingly</li>
+                    <li>If you didn't request this deletion, please <strong>ignore this email</strong></li>
+                </ul>
+            </div>
+            
+            <div style="background: rgba(46, 204, 113, 0.1); padding: 20px; border-radius: 10px; border-left: 4px solid #2ecc71; margin: 25px 0;">
+                <p style="margin: 0; color: #27ae60; font-weight: 500;">
+                    💡 <strong>Changed your mind?</strong> Simply ignore this email and your song will remain safely on the platform.
+                </p>
+            </div>
+            
+            <div class="signature">
+                <p style="margin-bottom: 15px; font-size: 16px;">Best regards,</p>
+                <p style="font-weight: 700; color: #2c3e50; font-size: 18px; margin-bottom: 5px;">AI Song Contest Team</p>
+                <p style="font-style: italic; color: #7f8c8d; margin: 0;">"Voices for Humanity" • "Stop Killer Robots"</p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>National AI Song Contest</strong></p>
+            <p>Organized by SPADO in collaboration with KRC Youth Network</p>
+            <p style="margin-top: 15px; font-size: 13px;">
+                This is an automated security verification email.<br>
+                For support, contact us at <strong>{{ admin_email|default:"support@aicontest.org" }}</strong>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

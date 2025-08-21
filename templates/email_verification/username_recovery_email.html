@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Username Recovery Code</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        .code-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .code {
+            font-size: 32px;
+            font-weight: bold;
+            letter-spacing: 8px;
+            margin: 10px 0;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🎵 National AI Song Contest</div>
+            <h2>Username Recovery Request</h2>
+        </div>
+        
+        <p>Hello,</p>
+        
+        <p>You requested to recover your username for your National AI Song Contest account. Use the verification code below to proceed:</p>
+        
+        <div class="code-box">
+            <div>Your verification code is:</div>
+            <div class="code">{{ code }}</div>
+            <div><small>This code expires in {{ expires_minutes }} minutes</small></div>
+        </div>
+        
+        <div class="warning">
+            <strong>Security Notice:</strong> If you didn't request this username recovery, please ignore this email. Your account remains secure.
+        </div>
+        
+        <p>Enter this code on the username recovery page to verify your identity and retrieve your username.</p>
+        
+        <p>Best regards,<br>
+        The SPADO Team</p>
+        
+        <div class="footer">
+            <p>This is an automated message from the National AI Song Contest platform.</p>
+            <p>Powered by SPADO | "Voices for Humanity"</p>
+        </div>
+    </div>
+</body>
+</html>

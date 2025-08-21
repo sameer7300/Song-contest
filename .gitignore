@@ -1,0 +1,47 @@
+# Environment variables
+.env
+
+# Django
+*.log
+*.pot
+*.pyc
+__pycache__/
+db.sqlite3
+/staticfiles/
+/media/
+
+# Python
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+#Deployment
+deployment_guide.md
+
+
+# Media and static files
+/media/
+staticfiles/
+
+# Migrations (optional, if you don't want to track them)
+**/migrations/*.py
+!**/migrations/__init__.py

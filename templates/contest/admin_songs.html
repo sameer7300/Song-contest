@@ -1,0 +1,657 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin - Manage Songs{% endblock %}
+
+{% block extra_css %}
+<style>
+    .song-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+    }
+    
+    .song-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    .song-thumbnail {
+        width: 80px;
+        height: 80px;
+        border-radius: 10px;
+        object-fit: cover;
+        border: 2px solid var(--primary-color);
+    }
+    
+    .song-status {
+        font-weight: 600;
+        padding: 6px 12px;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-approved {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+    }
+    
+    .status-pending {
+        background: linear-gradient(135deg, #ffc107, #fd7e14);
+        color: white;
+    }
+    
+    .status-rejected {
+        background: linear-gradient(135deg, #dc3545, #c82333);
+        color: white;
+    }
+    
+    .status-featured {
+        background: linear-gradient(135deg, #6f42c1, #e83e8c);
+        color: white;
+    }
+    
+    .admin-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        padding: 30px 0;
+        margin-bottom: 30px;
+        border-radius: 0 0 30px 30px;
+    }
+    
+    .filter-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .song-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    
+    .song-actions .btn {
+        border-radius: 15px;
+        padding: 6px 12px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    
+    .song-info {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .song-title {
+        font-weight: 600;
+        color: var(--primary-color);
+        margin-bottom: 5px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .song-artist {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 5px;
+    }
+    
+    .song-stats {
+        display: flex;
+        gap: 15px;
+        font-size: 0.8rem;
+        color: #888;
+    }
+    
+    .bulk-actions {
+        background: rgba(248, 249, 250, 0.9);
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+        display: none;
+    }
+    
+    .bulk-actions.show {
+        display: block;
+    }
+    
+    .select-all-checkbox {
+        margin-right: 10px;
+    }
+    
+    .pagination-wrapper {
+        display: flex;
+        justify-content: center;
+        margin-top: 30px;
+    }
+    
+    .audio-player {
+        width: 100%;
+        height: 40px;
+        border-radius: 20px;
+        margin-top: 10px;
+    }
+    
+    .song-details {
+        font-size: 0.85rem;
+        color: #666;
+        margin-top: 8px;
+    }
+    
+    .winner-badge {
+        background: linear-gradient(135deg, #ffd700, #ffed4e);
+        color: #333;
+        padding: 4px 8px;
+        border-radius: 10px;
+        font-size: 0.7rem;
+        font-weight: bold;
+        margin-left: 8px;
+    }
+    
+    .search-form {
+        margin-bottom: 0;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-2">
+                    <i class="fas fa-music me-3"></i>Manage Songs
+                </h1>
+                <p class="mb-0 opacity-75">Review, moderate, and manage contest submissions</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="d-flex gap-2 justify-content-end">
+                    <button class="btn btn-light" data-bs-toggle="modal" data-bs-target="#bulkActionsModal">
+                        <i class="fas fa-tasks me-2"></i>Bulk Actions
+                    </button>
+                    <a href="{% url 'contest:admin_dashboard' %}" class="btn btn-outline-light">
+                        <i class="fas fa-arrow-left me-2"></i>Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Filters -->
+    <div class="filter-card">
+        <form method="get" class="search-form">
+            <div class="row align-items-end">
+                <div class="col-md-3 mb-2">
+                    <label for="search" class="form-label">Search Songs</label>
+                    <input type="text" class="form-control" id="search" name="search" 
+                           value="{{ request.GET.search }}" placeholder="Title, artist, or genre...">
+                </div>
+                <div class="col-md-2 mb-2">
+                    <label for="status" class="form-label">Status</label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="">All Status</option>
+                        <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pending</option>
+                        <option value="approved" {% if request.GET.status == 'approved' %}selected{% endif %}>Approved</option>
+                        <option value="rejected" {% if request.GET.status == 'rejected' %}selected{% endif %}>Rejected</option>
+                    </select>
+                </div>
+                <div class="col-md-2 mb-2">
+                    <label for="featured" class="form-label">Featured</label>
+                    <select class="form-select" id="featured" name="featured">
+                        <option value="">All Songs</option>
+                        <option value="yes" {% if request.GET.featured == 'yes' %}selected{% endif %}>Featured Only</option>
+                        <option value="no" {% if request.GET.featured == 'no' %}selected{% endif %}>Not Featured</option>
+                    </select>
+                </div>
+                <div class="col-md-2 mb-2">
+                    <label for="language" class="form-label">Language</label>
+                    <select class="form-select" id="language" name="language">
+                        <option value="">All Languages</option>
+                        <option value="EN" {% if request.GET.language == 'EN' %}selected{% endif %}>English</option>
+                        <option value="ES" {% if request.GET.language == 'ES' %}selected{% endif %}>Spanish</option>
+                        <option value="FR" {% if request.GET.language == 'FR' %}selected{% endif %}>French</option>
+                        <option value="DE" {% if request.GET.language == 'DE' %}selected{% endif %}>German</option>
+                        <option value="OTHER" {% if request.GET.language == 'OTHER' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+                <div class="col-md-2 mb-2">
+                    <label for="sort" class="form-label">Sort By</label>
+                    <select class="form-select" id="sort" name="sort">
+                        <option value="-created_at" {% if request.GET.sort == '-created_at' %}selected{% endif %}>Newest First</option>
+                        <option value="created_at" {% if request.GET.sort == 'created_at' %}selected{% endif %}>Oldest First</option>
+                        <option value="-average_rating" {% if request.GET.sort == '-average_rating' %}selected{% endif %}>Highest Rated</option>
+                        <option value="average_rating" {% if request.GET.sort == 'average_rating' %}selected{% endif %}>Lowest Rated</option>
+                        <option value="title" {% if request.GET.sort == 'title' %}selected{% endif %}>Title A-Z</option>
+                        <option value="-title" {% if request.GET.sort == '-title' %}selected{% endif %}>Title Z-A</option>
+                    </select>
+                </div>
+                <div class="col-md-1 mb-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Bulk Actions Bar -->
+    <div class="bulk-actions" id="bulkActionsBar">
+        <div class="d-flex align-items-center justify-content-between">
+            <div>
+                <span id="selectedCount">0</span> songs selected
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-success btn-sm" onclick="bulkAction('approve')">
+                    <i class="fas fa-check me-1"></i>Approve
+                </button>
+                <button class="btn btn-warning btn-sm" onclick="bulkAction('pending')">
+                    <i class="fas fa-clock me-1"></i>Set Pending
+                </button>
+                <button class="btn btn-danger btn-sm" onclick="bulkAction('reject')">
+                    <i class="fas fa-times me-1"></i>Reject
+                </button>
+                <button class="btn btn-info btn-sm" onclick="bulkAction('feature')">
+                    <i class="fas fa-star me-1"></i>Feature
+                </button>
+                <button class="btn btn-secondary btn-sm" onclick="clearSelection()">
+                    <i class="fas fa-times me-1"></i>Clear
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Songs List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex align-items-center mb-3">
+                <input type="checkbox" class="form-check-input select-all-checkbox" id="selectAll">
+                <label for="selectAll" class="form-check-label">
+                    Select All ({{ page_obj.paginator.count }} songs)
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        {% for song in page_obj %}
+            <div class="col-12 mb-3">
+                <div class="song-card card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start">
+                            <div class="me-3">
+                                <input type="checkbox" class="form-check-input song-checkbox" 
+                                       value="{{ song.id }}" id="song-{{ song.id }}">
+                            </div>
+                            
+                            <div class="me-3">
+                                {% if song.thumbnail %}
+                                    <img src="{{ song.thumbnail.url }}" alt="{{ song.title }}" class="song-thumbnail">
+                                {% else %}
+                                    <div class="song-thumbnail d-flex align-items-center justify-content-center bg-secondary text-white">
+                                        <i class="fas fa-music fa-2x"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="song-info">
+                                <div class="d-flex align-items-center mb-2">
+                                    <h5 class="song-title mb-0">{{ song.title }}</h5>
+                                    {% if song.is_winner %}
+                                        <span class="winner-badge">
+                                            <i class="fas fa-trophy me-1"></i>Winner
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                
+                                <p class="song-artist">
+                                    <i class="fas fa-user me-1"></i>
+                                    {% if song.user %}
+                                        <a href="{% url 'contest:admin_edit_user' song.user.id %}" class="text-decoration-none">
+                                            {{ song.user.get_full_name|default:song.user.username }}
+                                        </a>
+                                    {% else %}
+                                        <span class="text-muted">Unknown Artist</span>
+                                    {% endif %}
+                                </p>
+                                
+                                <div class="song-stats">
+                                    <span><i class="fas fa-star me-1"></i>{{ song.average_rating|floatformat:1 }}/5</span>
+                                    <span><i class="fas fa-thumbs-up me-1"></i>{{ song.votes.count }} votes</span>
+                                    <span><i class="fas fa-eye me-1"></i>{{ song.view_count }} views</span>
+                                    <span><i class="fas fa-clock me-1"></i>{{ song.created_at|date:"M d, Y" }}</span>
+                                </div>
+                                
+                                <div class="song-details">
+                                    <span class="me-3"><strong>Genre:</strong> {{ song.get_genre_display }}</span>
+                                    <span class="me-3"><strong>Language:</strong> {{ song.get_language_display }}</span>
+                                    {% if song.duration %}
+                                        <span class="me-3"><strong>Duration:</strong> {{ song.duration }}</span>
+                                    {% endif %}
+                                </div>
+                                
+                                {% if song.audio_file %}
+                                    <audio controls class="audio-player">
+                                        <source src="{{ song.audio_file.url }}" type="audio/mpeg">
+                                        Your browser does not support the audio element.
+                                    </audio>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="d-flex flex-column align-items-end">
+                                <span class="song-status status-{{ song.status }} mb-3">
+                                    {{ song.get_status_display }}
+                                </span>
+                                
+                                {% if song.is_featured %}
+                                    <span class="song-status status-featured mb-3">
+                                        <i class="fas fa-star me-1"></i>Featured
+                                    </span>
+                                {% endif %}
+                                
+                                <div class="song-actions">
+                                    <a href="{% url 'contest:song_detail' song.id %}" class="btn btn-outline-primary btn-sm" target="_blank">
+                                        <i class="fas fa-eye me-1"></i>View
+                                    </a>
+                                    
+                                    {% if song.status == 'pending' %}
+                                        <button class="btn btn-success btn-sm btn-update-status" data-song-id="{{ song.id }}" data-status="approved">
+                                            <i class="fas fa-check me-1"></i>Approve
+                                        </button>
+                                        <button class="btn btn-danger btn-sm btn-update-status" data-song-id="{{ song.id }}" data-status="rejected">
+                                            <i class="fas fa-times me-1"></i>Reject
+                                        </button>
+                                    {% elif song.status == 'approved' %}
+                                        <button class="btn btn-warning btn-sm btn-update-status" data-song-id="{{ song.id }}" data-status="pending">
+                                            <i class="fas fa-clock me-1"></i>Pending
+                                        </button>
+                                    {% elif song.status == 'rejected' %}
+                                        <button class="btn btn-success btn-sm btn-update-status" data-song-id="{{ song.id }}" data-status="approved">
+                                            <i class="fas fa-check me-1"></i>Approve
+                                        </button>
+                                    {% endif %}
+
+                                    {% if song.is_featured %}
+                                        <button class="btn btn-outline-secondary btn-sm btn-toggle-feature" data-song-id="{{ song.id }}" data-featured="false">
+                                            <i class="fas fa-star-half me-1"></i>Unfeature
+                                        </button>
+                                    {% else %}
+                                        <button class="btn btn-info btn-sm btn-toggle-feature" data-song-id="{{ song.id }}" data-featured="true">
+                                            <i class="fas fa-star me-1"></i>Feature
+                                        </button>
+                                    {% endif %}
+
+                                    <button class="btn btn-danger btn-sm btn-delete-song" data-bs-toggle="modal" data-bs-target="#confirmModal" 
+                                            data-song-id="{{ song.id }}" data-song-title="{{ song.title|escapejs }}">
+                                        <i class="fas fa-trash me-1"></i>Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="fas fa-music fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">No Songs Found</h4>
+                    <p class="text-muted">No songs match your current filters.</p>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+        <div class="pagination-wrapper">
+            <nav aria-label="Songs pagination">
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.featured %}&featured={{ request.GET.featured }}{% endif %}{% if request.GET.language %}&language={{ request.GET.language }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">Previous</a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.featured %}&featured={{ request.GET.featured }}{% endif %}{% if request.GET.language %}&language={{ request.GET.language }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.featured %}&featured={{ request.GET.featured }}{% endif %}{% if request.GET.language %}&language={{ request.GET.language }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">Next</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmModalTitle">Confirm Action</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="confirmModalBody">
+                Are you sure you want to perform this action?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmActionBtn">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let selectedSongs = new Set();
+
+document.addEventListener('DOMContentLoaded', function() {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    // Select all functionality
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const songCheckboxes = document.querySelectorAll('.song-checkbox');
+    
+    selectAllCheckbox.addEventListener('change', function() {
+        songCheckboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+            if (this.checked) {
+                selectedSongs.add(checkbox.value);
+            } else {
+                selectedSongs.delete(checkbox.value);
+            }
+        });
+        updateBulkActionsBar();
+    });
+    
+    // Individual checkbox functionality
+    songCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            if (this.checked) {
+                selectedSongs.add(this.value);
+            } else {
+                selectedSongs.delete(this.value);
+            }
+            updateBulkActionsBar();
+            
+            // Update select all checkbox
+            const checkedCount = document.querySelectorAll('.song-checkbox:checked').length;
+            selectAllCheckbox.checked = checkedCount === songCheckboxes.length;
+            selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < songCheckboxes.length;
+        });
+    });
+
+    // Action buttons
+    document.querySelectorAll('.btn-update-status').forEach(button => {
+        button.addEventListener('click', function() {
+            updateSongStatus(this.dataset.songId, this.dataset.status);
+        });
+    });
+
+    document.querySelectorAll('.btn-toggle-feature').forEach(button => {
+        button.addEventListener('click', function() {
+            toggleFeature(this.dataset.songId, this.dataset.featured === 'true');
+        });
+    });
+
+    // Modal logic
+    const confirmModal = document.getElementById('confirmModal');
+    if (confirmModal) {
+        confirmModal.addEventListener('show.bs.modal', function(event) {
+            const button = event.relatedTarget;
+            const modalTitle = confirmModal.querySelector('.modal-title');
+            const modalBody = confirmModal.querySelector('.modal-body');
+            const confirmBtn = confirmModal.querySelector('#confirmActionBtn');
+
+            if (button.classList.contains('btn-delete-song')) {
+                const songId = button.dataset.songId;
+                const songTitle = button.dataset.songTitle;
+
+                modalTitle.textContent = 'Delete Song';
+                modalBody.innerHTML = `Are you sure you want to permanently delete the song "<strong>${songTitle}</strong>"? This action cannot be undone.`;
+                
+                confirmBtn.onclick = function() {
+                    deleteSong(songId);
+                };
+            }
+        });
+    }
+});
+
+function updateBulkActionsBar() {
+    const bulkActionsBar = document.getElementById('bulkActionsBar');
+    const selectedCount = document.getElementById('selectedCount');
+    
+    selectedCount.textContent = selectedSongs.size;
+    
+    if (selectedSongs.size > 0) {
+        bulkActionsBar.classList.add('show');
+    } else {
+        bulkActionsBar.classList.remove('show');
+    }
+}
+
+function clearSelection() {
+    selectedSongs.clear();
+    document.querySelectorAll('.song-checkbox').forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    document.getElementById('selectAll').checked = false;
+    document.getElementById('selectAll').indeterminate = false;
+    updateBulkActionsBar();
+}
+
+function updateSongStatus(songId, status) {
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.innerHTML = `
+        {% csrf_token %}
+        <input type="hidden" name="action" value="update_status">
+        <input type="hidden" name="song_id" value="${songId}">
+        <input type="hidden" name="status" value="${status}">
+    `;
+    document.body.appendChild(form);
+    form.submit();
+}
+
+function toggleFeature(songId, featured) {
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.innerHTML = `
+        {% csrf_token %}
+        <input type="hidden" name="action" value="toggle_feature">
+        <input type="hidden" name="song_id" value="${songId}">
+        <input type="hidden" name="featured" value="${featured}">
+    `;
+    document.body.appendChild(form);
+    form.submit();
+}
+
+function deleteSong(songId) {
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.innerHTML = `
+        {% csrf_token %}
+        <input type="hidden" name="action" value="delete_song">
+        <input type="hidden" name="song_id" value="${songId}">
+    `;
+    document.body.appendChild(form);
+    form.submit();
+}
+
+function bulkAction(action) {
+    if (selectedSongs.size === 0) {
+        alert('Please select at least one song.');
+        return;
+    }
+    
+    let actionText = '';
+    switch(action) {
+        case 'approve': actionText = 'approve'; break;
+        case 'reject': actionText = 'reject'; break;
+        case 'pending': actionText = 'set as pending'; break;
+        case 'feature': actionText = 'feature'; break;
+        default: actionText = 'perform this action on';
+    }
+    
+    document.getElementById('confirmModalTitle').textContent = 'Bulk Action';
+    document.getElementById('confirmModalBody').innerHTML = 
+        `Are you sure you want to ${actionText} ${selectedSongs.size} selected song(s)?`;
+    
+    document.getElementById('confirmActionBtn').onclick = function() {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.innerHTML = `
+            {% csrf_token %}
+            <input type="hidden" name="action" value="bulk_${action}">
+            <input type="hidden" name="song_ids" value="${Array.from(selectedSongs).join(',')}">
+        `;
+        document.body.appendChild(form);
+        form.submit();
+    };
+    
+    new bootstrap.Modal(document.getElementById('confirmModal')).show();
+}
+</script>
+{% endblock %}

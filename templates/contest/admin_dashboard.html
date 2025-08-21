@@ -1,0 +1,329 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12 mb-4">
+            <h1 class="display-4 fw-bold text-gradient">
+                <i class="fas fa-tachometer-alt me-3"></i>Admin Dashboard
+            </h1>
+            <p class="lead text-muted">Comprehensive contest management and analytics</p>
+        </div>
+    </div>
+
+    <!-- Quick Stats Cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-lg-3 col-md-6">
+            <div class="card hover-lift glassmorphism h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-users fa-3x text-primary mb-3"></i>
+                    <h3 class="card-title display-6 fw-bold text-gradient">{{ total_users }}</h3>
+                    <p class="card-text text-muted">Total Users</p>
+                    <small class="text-success">
+                        <i class="fas fa-user-check me-1"></i>{{ active_users }} active
+                    </small>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card hover-lift glassmorphism h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-music fa-3x text-info mb-3"></i>
+                    <h3 class="card-title display-6 fw-bold text-gradient">{{ total_songs }}</h3>
+                    <p class="card-text text-muted">Total Songs</p>
+                    <small class="text-warning">
+                        <i class="fas fa-star me-1"></i>{{ featured_songs }} featured
+                    </small>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card hover-lift glassmorphism h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-vote-yea fa-3x text-success mb-3"></i>
+                    <h3 class="card-title display-6 fw-bold text-gradient">{{ total_votes }}</h3>
+                    <p class="card-text text-muted">Total Votes</p>
+                    <small class="text-info">
+                        <i class="fas fa-comments me-1"></i>{{ total_comments }} comments
+                    </small>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card hover-lift glassmorphism h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-trophy fa-3x text-warning mb-3"></i>
+                    <h3 class="card-title display-6 fw-bold text-gradient">{{ total_winners }}</h3>
+                    <p class="card-text text-muted">Winners Selected</p>
+                    <small class="text-success">
+                        <i class="fas fa-crown me-1"></i>{{ winner_songs }} songs
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Management Quick Actions -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card glassmorphism">
+                <div class="card-header">
+                    <h4 class="mb-0 text-gradient">
+                        <i class="fas fa-tools me-2"></i>Quick Actions
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <a href="{% url 'contest:admin_users' %}" class="btn btn-outline-primary w-100 hover-lift">
+                                <i class="fas fa-users me-2"></i>Manage Users
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{% url 'contest:admin_songs' %}" class="btn btn-outline-info w-100 hover-lift">
+                                <i class="fas fa-music me-2"></i>Manage Songs
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{% url 'contest:admin_deadlines' %}" class="btn btn-outline-warning w-100 hover-lift">
+                                <i class="fas fa-clock me-2"></i>Manage Deadlines
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{% url 'contest:admin_winners' %}" class="btn btn-outline-success w-100 hover-lift">
+                                <i class="fas fa-trophy me-2"></i>Manage Winners
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current Contest Status -->
+    {% if current_deadline %}
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card glassmorphism">
+                <div class="card-header">
+                    <h4 class="mb-0 text-gradient">
+                        <i class="fas fa-calendar-alt me-2"></i>Current Contest Status
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="deadline-card deadline-card-{{ current_deadline.phase }}">
+                        <div class="deadline-card-header">
+                            <div class="deadline-card-icon">
+                                {% if current_deadline.phase == 'submission' %}
+                                    <i class="fas fa-upload"></i>
+                                {% elif current_deadline.phase == 'voting' %}
+                                    <i class="fas fa-vote-yea"></i>
+                                {% elif current_deadline.phase == 'results' %}
+                                    <i class="fas fa-trophy"></i>
+                                {% endif %}
+                            </div>
+                            <div class="deadline-card-status">
+                                <span class="status-mini status-{{ current_deadline.phase }}">
+                                    {{ current_deadline.get_phase_display }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="deadline-card-body">
+                            <h5 class="deadline-card-title">{{ current_deadline.get_phase_display }} Phase</h5>
+                            <div class="deadline-card-time">
+                                <div class="time-label">Deadline:</div>
+                                <div class="time-value">{{ current_deadline.deadline|date:"F d, Y - g:i A" }}</div>
+                            </div>
+                            {% if current_deadline.description %}
+                            <p class="deadline-card-description">{{ current_deadline.description }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="deadline-card-progress">
+                            <div class="progress-line progress-active" style="width: 75%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Recent Activity -->
+    <div class="row g-4 mb-5">
+        <div class="col-lg-4">
+            <div class="card glassmorphism h-100">
+                <div class="card-header">
+                    <h5 class="mb-0 text-gradient">
+                        <i class="fas fa-user-plus me-2"></i>Recent Users
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for user in recent_users %}
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-user-circle fa-2x text-primary"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0">{{ user.username }}</h6>
+                            <small class="text-muted">{{ user.date_joined|date:"M d, Y" }}</small>
+                        </div>
+                        <div class="flex-shrink-0">
+                            {% if user.is_verified %}
+                                <span class="badge bg-success">Verified</span>
+                            {% else %}
+                                <span class="badge bg-warning">Pending</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted">No recent users</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card glassmorphism h-100">
+                <div class="card-header">
+                    <h5 class="mb-0 text-gradient">
+                        <i class="fas fa-music me-2"></i>Recent Songs
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for song in recent_songs %}
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-music fa-2x text-info"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0">{{ song.title|truncatechars:20 }}</h6>
+                            <small class="text-muted">by {{ song.user.username }}</small>
+                        </div>
+                        <div class="flex-shrink-0">
+                            {% if song.is_winner %}
+                                <span class="badge bg-warning">Winner</span>
+                            {% elif song.is_featured %}
+                                <span class="badge bg-info">Featured</span>
+                            {% else %}
+                                <span class="badge bg-secondary">New</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted">No recent songs</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card glassmorphism h-100">
+                <div class="card-header">
+                    <h5 class="mb-0 text-gradient">
+                        <i class="fas fa-vote-yea me-2"></i>Recent Votes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for vote in recent_votes %}
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="flex-shrink-0">
+                            <div class="text-warning">
+                                {% for i in "12345" %}
+                                    {% if forloop.counter <= vote.rating %}
+                                        <i class="fas fa-star"></i>
+                                    {% else %}
+                                        <i class="far fa-star"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0">{{ vote.song.title|truncatechars:20 }}</h6>
+                            <small class="text-muted">by {{ vote.user.username }}</small>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <small class="text-muted">{{ vote.created_at|date:"M d" }}</small>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted">No recent votes</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Demographics -->
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card glassmorphism h-100">
+                <div class="card-header">
+                    <h5 class="mb-0 text-gradient">
+                        <i class="fas fa-chart-pie me-2"></i>User Demographics
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if city_stats %}
+                    <h6 class="text-muted mb-3">Top Cities</h6>
+                    {% for stat in city_stats %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>{{ stat.city }}</span>
+                        <span class="badge bg-info">{{ stat.count }}</span>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-muted">No city data available</p>
+                    {% endif %}
+                    
+                    <h6 class="text-muted mb-3 mt-4">User Activity</h6>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Verified Users</span>
+                        <span class="badge bg-success">{{ verified_users }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Staff Members</span>
+                        <span class="badge bg-warning">{{ staff_users }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6">
+            <div class="card glassmorphism h-100">
+                <div class="card-header">
+                    <h5 class="mb-0 text-gradient">
+                        <i class="fas fa-calendar me-2"></i>All Deadlines
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for deadline in all_deadlines %}
+                    <div class="d-flex justify-content-between align-items-center mb-3 p-2 rounded {% if deadline.is_active %}bg-success bg-opacity-10{% else %}bg-light{% endif %}">
+                        <div>
+                            <h6 class="mb-0">{{ deadline.get_phase_display }}</h6>
+                            <small class="text-muted">{{ deadline.deadline|date:"M d, Y - g:i A" }}</small>
+                        </div>
+                        <div>
+                            {% if deadline.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted">No deadlines set</p>
+                    {% endfor %}
+                    
+                    <div class="text-center mt-3">
+                        <a href="{% url 'contest:admin_deadlines' %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-plus me-1"></i>Manage Deadlines
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

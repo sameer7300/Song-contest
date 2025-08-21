@@ -1,0 +1,682 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin - Manage Users{% endblock %}
+
+{% block extra_css %}
+<style>
+    .user-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+    }
+    
+    .user-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    .user-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid var(--primary-color);
+    }
+    
+    .user-status {
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-active {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+    }
+    
+    .status-inactive {
+        background: linear-gradient(135deg, #dc3545, #c82333);
+        color: white;
+    }
+    
+    .status-staff {
+        background: linear-gradient(135deg, #6f42c1, #e83e8c);
+        color: white;
+    }
+    
+    .status-verified {
+        background: linear-gradient(135deg, #17a2b8, #138496);
+        color: white;
+    }
+    
+    .admin-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        padding: 30px 0;
+        margin-bottom: 30px;
+        border-radius: 0 0 30px 30px;
+    }
+    
+    .filter-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .user-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    
+    .user-actions .btn {
+        border-radius: 15px;
+        padding: 6px 12px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    
+    .user-info {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .user-name {
+        font-weight: 600;
+        color: var(--primary-color);
+        margin-bottom: 3px;
+    }
+    
+    .user-username {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 5px;
+    }
+    
+    .user-stats {
+        display: flex;
+        gap: 15px;
+        font-size: 0.8rem;
+        color: #888;
+        margin-top: 8px;
+    }
+    
+    .bulk-actions {
+        background: rgba(248, 249, 250, 0.9);
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+        display: none;
+    }
+    
+    .bulk-actions.show {
+        display: block;
+    }
+    
+    .select-all-checkbox {
+        margin-right: 10px;
+    }
+    
+    .pagination-wrapper {
+        display: flex;
+        justify-content: center;
+        margin-top: 30px;
+    }
+    
+    .user-badges {
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+        margin-top: 8px;
+    }
+    
+    .search-form {
+        margin-bottom: 0;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+    
+    .user-email {
+        color: #666;
+        font-size: 0.85rem;
+        margin-bottom: 5px;
+    }
+    
+    .user-join-date {
+        color: #999;
+        font-size: 0.8rem;
+    }
+    
+    .stats-summary {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stat-box {
+        text-align: center;
+        padding: 15px;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: var(--primary-color);
+        display: block;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        color: #666;
+        margin-top: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-2">
+                    <i class="fas fa-users me-3"></i>Manage Users
+                </h1>
+                <p class="mb-0 opacity-75">View, edit, and manage user accounts</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="d-flex gap-2 justify-content-end">
+                    <button class="btn btn-light" data-bs-toggle="modal" data-bs-target="#exportModal">
+                        <i class="fas fa-download me-2"></i>Export
+                    </button>
+                    <a href="{% url 'contest:admin_dashboard' %}" class="btn btn-outline-light">
+                        <i class="fas fa-arrow-left me-2"></i>Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Stats Summary -->
+    <div class="stats-summary">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="stat-box">
+                    <span class="stat-number">{{ total_users }}</span>
+                    <div class="stat-label">Total Users</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-box">
+                    <span class="stat-number">{{ active_users }}</span>
+                    <div class="stat-label">Active Users</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-box">
+                    <span class="stat-number">{{ verified_users }}</span>
+                    <div class="stat-label">Verified Users</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-box">
+                    <span class="stat-number">{{ staff_users }}</span>
+                    <div class="stat-label">Staff Users</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-card">
+        <form method="get" class="search-form">
+            <div class="row align-items-end">
+                <div class="col-md-3 mb-2">
+                    <label for="search" class="form-label">Search Users</label>
+                    <input type="text" class="form-control" id="search" name="search" 
+                           value="{{ request.GET.search }}" placeholder="Name, username, or email...">
+                </div>
+                <div class="col-md-2 mb-2">
+                    <label for="status" class="form-label">Status</label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="">All Users</option>
+                        <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active</option>
+                        <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactive</option>
+                    </select>
+                </div>
+                <div class="col-md-2 mb-2">
+                    <label for="verified" class="form-label">Verification</label>
+                    <select class="form-select" id="verified" name="verified">
+                        <option value="">All Users</option>
+                        <option value="yes" {% if request.GET.verified == 'yes' %}selected{% endif %}>Verified</option>
+                        <option value="no" {% if request.GET.verified == 'no' %}selected{% endif %}>Unverified</option>
+                    </select>
+                </div>
+                <div class="col-md-2 mb-2">
+                    <label for="role" class="form-label">Role</label>
+                    <select class="form-select" id="role" name="role">
+                        <option value="">All Roles</option>
+                        <option value="user" {% if request.GET.role == 'user' %}selected{% endif %}>Regular User</option>
+                        <option value="staff" {% if request.GET.role == 'staff' %}selected{% endif %}>Staff</option>
+                        <option value="superuser" {% if request.GET.role == 'superuser' %}selected{% endif %}>Superuser</option>
+                    </select>
+                </div>
+                <div class="col-md-2 mb-2">
+                    <label for="sort" class="form-label">Sort By</label>
+                    <select class="form-select" id="sort" name="sort">
+                        <option value="-date_joined" {% if request.GET.sort == '-date_joined' %}selected{% endif %}>Newest First</option>
+                        <option value="date_joined" {% if request.GET.sort == 'date_joined' %}selected{% endif %}>Oldest First</option>
+                        <option value="username" {% if request.GET.sort == 'username' %}selected{% endif %}>Username A-Z</option>
+                        <option value="-username" {% if request.GET.sort == '-username' %}selected{% endif %}>Username Z-A</option>
+                        <option value="-last_login" {% if request.GET.sort == '-last_login' %}selected{% endif %}>Last Login</option>
+                    </select>
+                </div>
+                <div class="col-md-1 mb-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Bulk Actions Bar -->
+    <div class="bulk-actions" id="bulkActionsBar">
+        <div class="d-flex align-items-center justify-content-between">
+            <div>
+                <span id="selectedCount">0</span> users selected
+            </div>
+            <div class="d-flex gap-2" id="bulkActionsButtons">
+                <button class="btn btn-success btn-sm" data-action="activate">
+                    <i class="fas fa-check me-1"></i>Activate
+                </button>
+                <button class="btn btn-warning btn-sm" data-action="deactivate">
+                    <i class="fas fa-ban me-1"></i>Deactivate
+                </button>
+                <button class="btn btn-info btn-sm" data-action="verify">
+                    <i class="fas fa-shield-check me-1"></i>Verify
+                </button>
+                <button class="btn btn-danger btn-sm" data-action="delete">
+                    <i class="fas fa-trash me-1"></i>Delete
+                </button>
+                <button class="btn btn-secondary btn-sm" id="clearSelectionBtn">
+                    <i class="fas fa-times me-1"></i>Clear
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex align-items-center mb-3">
+                <input type="checkbox" class="form-check-input select-all-checkbox" id="selectAll">
+                <label for="selectAll" class="form-check-label">
+                    Select All ({{ page_obj.paginator.count }} users)
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        {% for user in page_obj %}
+            <div class="col-lg-6 mb-3">
+                <div class="user-card card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start">
+                            <div class="me-3">
+                                <input type="checkbox" class="form-check-input user-checkbox" 
+                                       value="{{ user.id }}" id="user-{{ user.id }}">
+                            </div>
+                            
+                            <div class="me-3">
+                                {% if user.avatar %}
+                                    <img src="{{ user.avatar.url }}" alt="{{ user.username }}" class="user-avatar">
+                                {% else %}
+                                    <div class="user-avatar d-flex align-items-center justify-content-center bg-secondary text-white">
+                                        <i class="fas fa-user fa-lg"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="user-info">
+                                <h6 class="user-name">{{ user.get_full_name|default:user.username }}</h6>
+                                <div class="user-username">@{{ user.username }}</div>
+                                <div class="user-email">{{ user.email }}</div>
+                                <div class="user-join-date">
+                                    <i class="fas fa-calendar-alt me-1"></i>
+                                    Joined {{ user.date_joined|date:"M d, Y" }}
+                                </div>
+                                
+                                <div class="user-stats">
+                                    <span><i class="fas fa-music me-1"></i>{{ user.songs.count }} songs</span>
+                                    <span><i class="fas fa-thumbs-up me-1"></i>{{ user.votes.count }} votes</span>
+                                    <span><i class="fas fa-clock me-1"></i>{{ user.last_login|date:"M d"|default:"Never" }}</span>
+                                </div>
+                                
+                                <div class="user-badges">
+                                    {% if user.is_active %}
+                                        <span class="user-status status-active">Active</span>
+                                    {% else %}
+                                        <span class="user-status status-inactive">Inactive</span>
+                                    {% endif %}
+                                    
+                                    {% if user.is_verified %}
+                                        <span class="user-status status-verified">Verified</span>
+                                    {% endif %}
+                                    
+                                    {% if user.is_staff %}
+                                        <span class="user-status status-staff">Staff</span>
+                                    {% endif %}
+                                    
+                                    {% if user.is_superuser %}
+                                        <span class="user-status status-staff">Superuser</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="user-actions">
+                                <a href="{% url 'contest:admin_edit_user' user.id %}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-edit me-1"></i>Edit
+                                </a>
+                                
+                                {% if user.is_active %}
+                                    <button class="btn btn-warning btn-sm user-action-btn" data-action="toggle-status" data-user-id="{{ user.id }}" data-activate="false">
+                                        <i class="fas fa-ban me-1"></i>Deactivate
+                                    </button>
+                                {% else %}
+                                    <button class="btn btn-success btn-sm user-action-btn" data-action="toggle-status" data-user-id="{{ user.id }}" data-activate="true">
+                                        <i class="fas fa-check me-1"></i>Activate
+                                    </button>
+                                {% endif %}
+                                
+                                {% if not user.is_verified %}
+                                    <button class="btn btn-info btn-sm user-action-btn" data-action="verify-user" data-user-id="{{ user.id }}">
+                                        <i class="fas fa-shield-check me-1"></i>Verify
+                                    </button>
+                                {% endif %}
+                                
+                                <button class="btn btn-danger btn-sm user-action-btn" data-bs-toggle="modal" data-bs-target="#confirmModal" data-action="delete-user" data-user-id="{{ user.id }}" data-username="{{ user.username|escapejs }}">
+                                    <i class="fas fa-trash me-1"></i>Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">No Users Found</h4>
+                    <p class="text-muted">No users match your current filters.</p>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+        <div class="pagination-wrapper">
+            <nav aria-label="Users pagination">
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.verified %}&verified={{ request.GET.verified }}{% endif %}{% if request.GET.role %}&role={{ request.GET.role }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">Previous</a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.verified %}&verified={{ request.GET.verified }}{% endif %}{% if request.GET.role %}&role={{ request.GET.role }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.verified %}&verified={{ request.GET.verified }}{% endif %}{% if request.GET.role %}&role={{ request.GET.role }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">Next</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmModalTitle">Confirm Action</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="confirmModalBody">
+                Are you sure you want to perform this action?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmActionBtn">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export Modal -->
+<div class="modal fade" id="exportModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Export Users</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Choose the format for exporting user data:</p>
+                <div class="d-grid gap-2" id="exportButtons">
+                    <button class="btn btn-outline-primary" data-format="csv">
+                        <i class="fas fa-file-csv me-2"></i>Export as CSV
+                    </button>
+                    <button class="btn btn-outline-success" data-format="excel">
+                        <i class="fas fa-file-excel me-2"></i>Export as Excel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let selectedUsers = new Set();
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Select all functionality
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const userCheckboxes = document.querySelectorAll('.user-checkbox');
+    
+    selectAllCheckbox.addEventListener('change', function() {
+        userCheckboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+            if (this.checked) {
+                selectedUsers.add(checkbox.value);
+            } else {
+                selectedUsers.delete(checkbox.value);
+            }
+        });
+        updateBulkActionsBar();
+    });
+    
+    // Individual checkbox functionality
+    userCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            if (this.checked) {
+                selectedUsers.add(this.value);
+            } else {
+                selectedUsers.delete(this.value);
+            }
+            updateBulkActionsBar();
+            
+            // Update select all checkbox
+            const checkedCount = document.querySelectorAll('.user-checkbox:checked').length;
+            selectAllCheckbox.checked = checkedCount === userCheckboxes.length;
+            selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < userCheckboxes.length;
+        });
+    });
+});
+
+function updateBulkActionsBar() {
+    const bulkActionsBar = document.getElementById('bulkActionsBar');
+    const selectedCount = document.getElementById('selectedCount');
+    
+    selectedCount.textContent = selectedUsers.size;
+    
+    if (selectedUsers.size > 0) {
+        bulkActionsBar.classList.add('show');
+    } else {
+        bulkActionsBar.classList.remove('show');
+    }
+}
+
+function clearSelection() {
+    selectedUsers.clear();
+    document.querySelectorAll('.user-checkbox').forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    const selectAll = document.getElementById('selectAll');
+    if (selectAll) {
+        selectAll.checked = false;
+        selectAll.indeterminate = false;
+    }
+    updateBulkActionsBar();
+}
+
+function submitActionForm(action, data) {
+    const form = document.createElement('form');
+    form.method = 'POST';
+    let innerHTML = `{% csrf_token %}<input type="hidden" name="action" value="${action}">`;
+    for (const key in data) {
+        innerHTML += `<input type="hidden" name="${key}" value="${data[key]}">`;
+    }
+    form.innerHTML = innerHTML;
+    document.body.appendChild(form);
+    form.submit();
+}
+
+// Event listeners
+document.addEventListener('click', function(e) {
+    // Single user actions
+    const target = e.target.closest('.user-action-btn');
+    if (target) {
+        const { action, userId, activate } = target.dataset;
+        if (action === 'toggle-status') {
+            submitActionForm('toggle_status', { user_id: userId, activate: activate });
+        } else if (action === 'verify-user') {
+            submitActionForm('verify_user', { user_id: userId });
+        }
+        return;
+    }
+
+    // Bulk actions
+    const bulkActionBtn = e.target.closest('#bulkActionsButtons button[data-action]');
+    if (bulkActionBtn) {
+        const action = bulkActionBtn.dataset.action;
+        if (selectedUsers.size === 0) {
+            alert('Please select at least one user.');
+            return;
+        }
+
+        const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+        const confirmModalTitle = document.getElementById('confirmModalTitle');
+        const confirmModalBody = document.getElementById('confirmModalBody');
+        const confirmActionBtn = document.getElementById('confirmActionBtn');
+
+        confirmModalTitle.textContent = 'Confirm Bulk Action';
+        confirmModalBody.innerHTML = `Are you sure you want to ${action} ${selectedUsers.size} selected user(s)?`;
+        
+        confirmActionBtn.onclick = () => {
+            submitActionForm(`bulk_${action}`, { user_ids: Array.from(selectedUsers).join(',') });
+        };
+        confirmModal.show();
+        return;
+    }
+
+    // Clear selection
+    if (e.target.closest('#clearSelectionBtn')) {
+        clearSelection();
+        return;
+    }
+
+    // Export buttons
+    const exportBtn = e.target.closest('#exportButtons button[data-format]');
+    if (exportBtn) {
+        const format = exportBtn.dataset.format;
+        submitActionForm('export', { format: format });
+        const exportModal = bootstrap.Modal.getInstance(document.getElementById('exportModal'));
+        if (exportModal) {
+            exportModal.hide();
+        }
+        return;
+    }
+});
+
+// Modal listener for single user deletion
+const confirmModal = document.getElementById('confirmModal');
+if (confirmModal) {
+    confirmModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        if (!button) return;
+
+        const action = button.dataset.action;
+        if (action === 'delete-user') {
+            const userId = button.dataset.userId;
+            const username = button.dataset.username;
+
+            const modalTitle = confirmModal.querySelector('.modal-title');
+            const modalBody = confirmModal.querySelector('.modal-body');
+            const confirmActionBtn = confirmModal.querySelector('#confirmActionBtn');
+
+            modalTitle.textContent = 'Delete User';
+            modalBody.innerHTML = `Are you sure you want to permanently delete the user "<strong>${username}</strong>"? This will also delete all their songs, votes, and comments. This action cannot be undone.`;
+            
+            confirmActionBtn.onclick = () => {
+                submitActionForm('delete_user', { user_id: userId });
+            };
+        }
+    });
+}
+</script>
+{% endblock %}

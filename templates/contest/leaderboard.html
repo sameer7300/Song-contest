@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}Leaderboard - AI Song Contest{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">
+                <i class="fas fa-trophy me-2 text-warning"></i>Leaderboard
+            </h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Top Artists -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-users me-2"></i>Top Artists
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for artist in top_artists %}
+                    <div class="d-flex justify-content-between align-items-center mb-3 p-2 {% if forloop.first %}bg-warning bg-opacity-25 rounded{% elif forloop.counter == 2 %}bg-secondary bg-opacity-25 rounded{% elif forloop.counter == 3 %}bg-info bg-opacity-25 rounded{% endif %}">
+                        <div>
+                            <div class="fw-bold">
+                                {% if forloop.first %}🥇{% elif forloop.counter == 2 %}🥈{% elif forloop.counter == 3 %}🥉{% else %}{{ forloop.counter }}.{% endif %}
+                                {{ artist.user__first_name|default:artist.user__username }}
+                            </div>
+                            <small class="text-muted">{{ artist.song_count }} songs</small>
+                        </div>
+                        <div class="text-end">
+                            <div class="fw-bold text-primary">{{ artist.total_votes }} votes</div>
+                            <small class="text-muted">{{ artist.avg_rating|floatformat:1 }}★</small>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted">No votes yet!</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Rated Songs -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-star me-2"></i>Top Rated Songs
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for song in top_songs %}
+                    <div class="mb-3 p-2 {% if forloop.first %}bg-warning bg-opacity-25 rounded{% elif forloop.counter == 2 %}bg-secondary bg-opacity-25 rounded{% elif forloop.counter == 3 %}bg-info bg-opacity-25 rounded{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="fw-bold">
+                                    {% if forloop.first %}🥇{% elif forloop.counter == 2 %}🥈{% elif forloop.counter == 3 %}🥉{% else %}{{ forloop.counter }}.{% endif %}
+                                    <a href="{% url 'contest:song_detail' song.id %}" class="text-decoration-none">{{ song.title }}</a>
+                                </div>
+                                <small class="text-muted">by {{ song.user.get_display_name }}</small>
+                            </div>
+                            <div class="text-end">
+                                <div class="text-warning">{{ song.average_rating|floatformat:1 }}★</div>
+                                <small class="text-muted">{{ song.vote_count }} votes</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted">No rated songs yet!</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Most Viewed Songs -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-eye me-2"></i>Most Viewed
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for song in most_viewed %}
+                    <div class="mb-3 p-2 {% if forloop.first %}bg-warning bg-opacity-25 rounded{% elif forloop.counter == 2 %}bg-secondary bg-opacity-25 rounded{% elif forloop.counter == 3 %}bg-info bg-opacity-25 rounded{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="fw-bold">
+                                    {% if forloop.first %}🥇{% elif forloop.counter == 2 %}🥈{% elif forloop.counter == 3 %}🥉{% else %}{{ forloop.counter }}.{% endif %}
+                                    <a href="{% url 'contest:song_detail' song.id %}" class="text-decoration-none">{{ song.title }}</a>
+                                </div>
+                                <small class="text-muted">by {{ song.user.get_display_name }}</small>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-bold text-primary">{{ song.view_count }}</div>
+                                <small class="text-muted">views</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted">No views yet!</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Winner Announcement - AI Song Contest</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            border: 3px solid #ffd700;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            color: #2c5aa0;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .winner-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        .winner-badge {
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            color: #333;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-weight: bold;
+            display: inline-block;
+            font-size: 18px;
+            margin: 20px 0;
+        }
+        .song-details {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid #ffd700;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+        }
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            background: linear-gradient(45deg, #2c5aa0, #1e3d72);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+        .celebration {
+            text-align: center;
+            font-size: 20px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🎵 AI Song Contest</div>
+            <div class="winner-icon">🏆👑🎉</div>
+            <h1 style="color: #ffd700; margin: 0;">CONGRATULATIONS!</h1>
+            <div class="winner-badge">🏆 CONTEST WINNER 🏆</div>
+        </div>
+        
+        <div class="celebration">
+            🎊 You are officially a winner of the National AI Song Contest! 🎊
+        </div>
+        
+        <p>Dear {{ user.get_display_name }},</p>
+        
+        <p>We are thrilled to announce that your song has been selected as a <strong>WINNER</strong> in the National AI Song Contest - "Voices for Humanity"!</p>
+        
+        <div class="song-details">
+            <h4>🏆 Your Winning Song:</h4>
+            <ul>
+                <li><strong>Title:</strong> {{ song.title }}</li>
+                <li><strong>Genre:</strong> {{ song.get_genre_display }}</li>
+                <li><strong>Language:</strong> {{ song.get_language_display }}</li>
+                <li><strong>Rating:</strong> {{ song.get_rating_display }} ({{ song.vote_count }} votes)</li>
+                <li><strong>Views:</strong> {{ song.view_count }}</li>
+                {% if winner.prize_amount %}
+                <li><strong>Prize:</strong> ${{ winner.prize_amount }}</li>
+                {% endif %}
+            </ul>
+        </div>
+        
+        <p><strong>Why you won:</strong></p>
+        <p>Your song perfectly captured the contest theme of banning autonomous weapons systems and promoting the message that "AI should serve humanity, not kill." Your creativity, musical talent, and powerful message made a significant impact on our judges and voters.</p>
+        
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="http://127.0.0.1:8000/song/{{ song.id }}/" class="btn">View Your Winning Song</a>
+        </div>
+        
+        <p><strong>What's next?</strong></p>
+        <ul>
+            <li>🌟 Your song is now featured on our winners page</li>
+            <li>📢 We'll be promoting your song across our social media</li>
+            <li>🎤 You may be contacted for interviews or features</li>
+            <li>💰 Prize details will be communicated separately if applicable</li>
+        </ul>
+        
+        <p>Thank you for using your voice to promote peace and humanity. Your contribution to this important cause is truly appreciated!</p>
+        
+        <div class="celebration">
+            🎉 Celebrate your victory and keep creating! 🎉
+        </div>
+        
+        <p>With immense gratitude and congratulations,<br>
+        <strong>AI Song Contest Team</strong><br>
+        "Voices for Humanity"</p>
+        
+        <div class="footer">
+            <p><strong>National AI Song Contest</strong><br>
+            Organized by SPADO in collaboration with KRC Youth Network</p>
+            <p>Theme: Ban Autonomous Weapons Systems (AWS) – Stop Killer Robots</p>
+            <p>Contact us: {{ admin_email }}</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,614 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin - Manage Winners{% endblock %}
+
+{% block extra_css %}
+<style>
+    .winner-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .winner-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    .winner-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(135deg, #ffd700, #ffed4e);
+    }
+    
+    .song-thumbnail {
+        width: 80px;
+        height: 80px;
+        border-radius: 10px;
+        object-fit: cover;
+        border: 3px solid #ffd700;
+        box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+    }
+    
+    .winner-position {
+        background: linear-gradient(135deg, #ffd700, #ffed4e);
+        color: #333;
+        font-weight: bold;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .position-1st { background: linear-gradient(135deg, #ffd700, #ffed4e); }
+    .position-2nd { background: linear-gradient(135deg, #c0c0c0, #e8e8e8); }
+    .position-3rd { background: linear-gradient(135deg, #cd7f32, #daa520); }
+    
+    .admin-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        padding: 30px 0;
+        margin-bottom: 30px;
+        border-radius: 0 0 30px 30px;
+    }
+    
+    .contest-selector {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .winner-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    
+    .winner-actions .btn {
+        border-radius: 15px;
+        padding: 6px 12px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    
+    .winner-info {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .song-title {
+        font-weight: 600;
+        color: var(--primary-color);
+        margin-bottom: 5px;
+        font-size: 1.1rem;
+    }
+    
+    .artist-name {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 8px;
+    }
+    
+    .winner-stats {
+        display: flex;
+        gap: 15px;
+        font-size: 0.85rem;
+        color: #888;
+        margin-top: 10px;
+    }
+    
+    .trophy-icon {
+        font-size: 2rem;
+        color: #ffd700;
+        margin-right: 15px;
+    }
+    
+    .winner-announcement {
+        background: linear-gradient(135deg, #ffd700, #ffed4e);
+        color: #333;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 30px;
+        text-align: center;
+        font-weight: 600;
+    }
+    
+    .no-winners-card {
+        background: rgba(248, 249, 250, 0.9);
+        border: 2px dashed #dee2e6;
+        border-radius: 15px;
+        padding: 40px;
+        text-align: center;
+        margin: 30px 0;
+    }
+    
+    .winner-selection {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+    
+    .btn-gradient {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        border: none;
+        color: white;
+        font-weight: 600;
+        padding: 12px 30px;
+        border-radius: 25px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-gradient:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        color: white;
+    }
+    
+    .winner-badge {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: linear-gradient(135deg, #ffd700, #ffed4e);
+        color: #333;
+        padding: 4px 8px;
+        border-radius: 10px;
+        font-size: 0.7rem;
+        font-weight: bold;
+    }
+    
+    .contest-period {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 15px;
+    }
+    
+    .winner-date {
+        color: #999;
+        font-size: 0.8rem;
+        margin-top: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-2">
+                    <i class="fas fa-trophy me-3"></i>Manage Winners
+                </h1>
+                <p class="mb-0 opacity-75">Select and manage contest winners</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="d-flex gap-2 justify-content-end">
+                    <button class="btn btn-light" data-bs-toggle="modal" data-bs-target="#announceModal">
+                        <i class="fas fa-bullhorn me-2"></i>Announce
+                    </button>
+                    <a href="{% url 'contest:admin_dashboard' %}" class="btn btn-outline-light">
+                        <i class="fas fa-arrow-left me-2"></i>Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Contest Selector -->
+    <div class="contest-selector">
+        <form method="get" class="d-flex align-items-end gap-3">
+            <div class="flex-grow-1">
+                <label for="contest_period" class="form-label">Contest Period</label>
+                <select class="form-select" id="contest_period" name="contest_period">
+                    <option value="current" {% if request.GET.contest_period == 'current' %}selected{% endif %}>Current Contest</option>
+                    <option value="2024-01" {% if request.GET.contest_period == '2024-01' %}selected{% endif %}>January 2024</option>
+                    <option value="2023-12" {% if request.GET.contest_period == '2023-12' %}selected{% endif %}>December 2023</option>
+                    <option value="2023-11" {% if request.GET.contest_period == '2023-11' %}selected{% endif %}>November 2023</option>
+                    <option value="all" {% if request.GET.contest_period == 'all' %}selected{% endif %}>All Time</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-search me-2"></i>View Winners
+            </button>
+        </form>
+    </div>
+
+    {% if current_contest %}
+        <div class="winner-announcement">
+            <h4 class="mb-2">
+                <i class="fas fa-trophy me-2"></i>{{ current_contest.name }} Winners
+            </h4>
+            <div class="contest-period">
+                Contest Period: {{ current_contest.start_date|date:"M d, Y" }} - {{ current_contest.end_date|date:"M d, Y" }}
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Winner Selection (only show if no winners selected yet) -->
+    {% if not winners and eligible_songs %}
+        <div class="winner-selection">
+            <h5 class="mb-3">
+                <i class="fas fa-star me-2"></i>Select Contest Winners
+            </h5>
+            <p class="text-muted mb-4">Choose the top songs from this contest period to declare as winners.</p>
+            
+            <form method="post" id="winnerSelectionForm">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="select_winners">
+                
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="first_place" class="form-label">🥇 First Place</label>
+                        <select class="form-select" id="first_place" name="first_place" required>
+                            <option value="">Select 1st place winner...</option>
+                            {% for song in eligible_songs %}
+                                <option value="{{ song.id }}">{{ song.title }} - {{ song.artist.username }} ({{ song.average_rating|floatformat:1 }}/5)</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="second_place" class="form-label">🥈 Second Place</label>
+                        <select class="form-select" id="second_place" name="second_place">
+                            <option value="">Select 2nd place winner...</option>
+                            {% for song in eligible_songs %}
+                                <option value="{{ song.id }}">{{ song.title }} - {{ song.artist.username }} ({{ song.average_rating|floatformat:1 }}/5)</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="third_place" class="form-label">🥉 Third Place</label>
+                        <select class="form-select" id="third_place" name="third_place">
+                            <option value="">Select 3rd place winner...</option>
+                            {% for song in eligible_songs %}
+                                <option value="{{ song.id }}">{{ song.title }} - {{ song.artist.username }} ({{ song.average_rating|floatformat:1 }}/5)</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="text-center">
+                    <button type="submit" class="btn btn-gradient btn-lg">
+                        <i class="fas fa-trophy me-2"></i>Declare Winners
+                    </button>
+                </div>
+            </form>
+        </div>
+    {% endif %}
+
+    <!-- Winners List -->
+    {% if winners %}
+        <div class="row">
+            {% for winner in winners %}
+                <div class="col-lg-6 mb-4">
+                    <div class="winner-card card">
+                        <div class="winner-badge">
+                            {% if winner.position == 1 %}🥇{% elif winner.position == 2 %}🥈{% elif winner.position == 3 %}🥉{% else %}🏆{% endif %}
+                            {{ winner.get_position_display }}
+                        </div>
+                        
+                        <div class="card-body">
+                            <div class="d-flex align-items-start">
+                                <div class="me-3">
+                                    <i class="fas fa-trophy trophy-icon"></i>
+                                </div>
+                                
+                                <div class="me-3">
+                                    {% if winner.song.thumbnail %}
+                                        <img src="{{ winner.song.thumbnail.url }}" alt="{{ winner.song.title }}" class="song-thumbnail">
+                                    {% else %}
+                                        <div class="song-thumbnail d-flex align-items-center justify-content-center bg-secondary text-white">
+                                            <i class="fas fa-music fa-2x"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="winner-info">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <span class="winner-position position-{{ winner.position }}{% if winner.position == 1 %}st{% elif winner.position == 2 %}nd{% elif winner.position == 3 %}rd{% endif %}">
+                                            {% if winner.position == 1 %}🥇{% elif winner.position == 2 %}🥈{% elif winner.position == 3 %}🥉{% endif %}
+                                            {{ winner.get_position_display }}
+                                        </span>
+                                    </div>
+                                    
+                                    <h5 class="song-title">{{ winner.song.title }}</h5>
+                                    <div class="artist-name">
+                                        <i class="fas fa-user me-1"></i>
+                                        <a href="{% url 'contest:admin_edit_user' winner.song.artist.id %}" class="text-decoration-none">
+                                            {{ winner.song.artist.get_full_name|default:winner.song.artist.username }}
+                                        </a>
+                                    </div>
+                                    
+                                    <div class="winner-stats">
+                                        <span><i class="fas fa-star me-1"></i>{{ winner.song.average_rating|floatformat:1 }}/5</span>
+                                        <span><i class="fas fa-thumbs-up me-1"></i>{{ winner.song.votes.count }} votes</span>
+                                        <span><i class="fas fa-eye me-1"></i>{{ winner.song.view_count }} views</span>
+                                    </div>
+                                    
+                                    <div class="winner-date">
+                                        <i class="fas fa-calendar-alt me-1"></i>
+                                        Declared winner on {{ winner.declared_at|date:"M d, Y" }}
+                                    </div>
+                                </div>
+                                
+                                <div class="winner-actions">
+                                    <a href="{% url 'contest:song_detail' winner.song.id %}" class="btn btn-outline-primary btn-sm" target="_blank">
+                                        <i class="fas fa-eye me-1"></i>View Song
+                                    </a>
+                                    
+                                    <button class="btn btn-warning btn-sm winner-action-btn" data-bs-toggle="modal" data-bs-target="#changePositionModal" data-action="change-position" data-winner-id="{{ winner.id }}" data-current-position="{{ winner.position }}">
+                                        <i class="fas fa-edit me-1"></i>Change Position
+                                    </button>
+                                    
+                                    <button class="btn btn-danger btn-sm winner-action-btn" data-bs-toggle="modal" data-bs-target="#confirmModal" data-action="remove-winner" data-winner-id="{{ winner.id }}" data-song-title="{{ winner.song.title|escapejs }}">
+                                        <i class="fas fa-times me-1"></i>Remove
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="no-winners-card">
+            <i class="fas fa-trophy fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">No Winners Selected</h4>
+            <p class="text-muted">
+                {% if eligible_songs %}
+                    Select winners from the eligible songs above to declare contest results.
+                {% else %}
+                    No eligible songs found for the selected contest period.
+                {% endif %}
+            </p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Change Position Modal -->
+<div class="modal fade" id="changePositionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Change Winner Position</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" id="changeWinnerId" name="winner_id">
+                <input type="hidden" name="action" value="change_position">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="newPosition" class="form-label">New Position</label>
+                        <select class="form-select" id="newPosition" name="new_position" required>
+                            <option value="1">🥇 First Place</option>
+                            <option value="2">🥈 Second Place</option>
+                            <option value="3">🥉 Third Place</option>
+                        </select>
+                    </div>
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Changing positions will affect other winners' rankings.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-edit me-2"></i>Change Position
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Announce Winners Modal -->
+<div class="modal fade" id="announceModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Announce Winners</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="announce_winners">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="announcementTitle" class="form-label">Announcement Title</label>
+                        <input type="text" class="form-control" id="announcementTitle" name="title" 
+                               value="Contest Winners Announced!" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="announcementMessage" class="form-label">Announcement Message</label>
+                        <textarea class="form-control" id="announcementMessage" name="message" rows="4" 
+                                  placeholder="Congratulations to our contest winners..."></textarea>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="sendEmails" name="send_emails" checked>
+                        <label class="form-check-label" for="sendEmails">
+                            Send email notifications to all users
+                        </label>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="publishResults" name="publish_results" checked>
+                        <label class="form-check-label" for="publishResults">
+                            Publish results on the winners page
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-gradient">
+                        <i class="fas fa-bullhorn me-2"></i>Announce Winners
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmModalTitle">Confirm Action</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="confirmModalBody">
+                Are you sure you want to perform this action?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmActionBtn">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Prevent selecting the same song for multiple positions
+    const positionSelects = ['first_place', 'second_place', 'third_place'];
+    
+    positionSelects.forEach(selectId => {
+        const select = document.getElementById(selectId);
+        if (select) {
+            select.addEventListener('change', function() {
+                updateAvailableOptions();
+            });
+        }
+    });
+    
+    function updateAvailableOptions() {
+        const selectedValues = positionSelects.map(id => {
+            const select = document.getElementById(id);
+            return select ? select.value : '';
+        }).filter(value => value !== '');
+        
+        positionSelects.forEach(selectId => {
+            const select = document.getElementById(selectId);
+            if (select) {
+                const currentValue = select.value;
+                const options = select.querySelectorAll('option');
+                
+                options.forEach(option => {
+                    if (option.value === '') return; // Skip empty option
+                    
+                    if (selectedValues.includes(option.value) && option.value !== currentValue) {
+                        option.disabled = true;
+                        option.textContent = option.textContent.replace(' (Selected)', '') + ' (Selected)';
+                    } else {
+                        option.disabled = false;
+                        option.textContent = option.textContent.replace(' (Selected)', '');
+                    }
+                });
+            }
+        });
+    }
+    
+    // Form validation
+    const winnerForm = document.getElementById('winnerSelectionForm');
+    if (winnerForm) {
+        winnerForm.addEventListener('submit', function(e) {
+            const firstPlace = document.getElementById('first_place').value;
+            if (!firstPlace) {
+                e.preventDefault();
+                alert('Please select at least a first place winner.');
+                return false;
+            }
+        });
+    }
+});
+
+// Modal event listeners
+const changePositionModal = document.getElementById('changePositionModal');
+if (changePositionModal) {
+    changePositionModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        if (!button) return;
+
+        const action = button.dataset.action;
+        if (action === 'change-position') {
+            const winnerId = button.dataset.winnerId;
+            const currentPosition = button.dataset.currentPosition;
+
+            document.getElementById('changeWinnerId').value = winnerId;
+            document.getElementById('newPosition').value = currentPosition;
+        }
+    });
+}
+
+const confirmModal = document.getElementById('confirmModal');
+if (confirmModal) {
+    confirmModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        if (!button) return;
+
+        const action = button.dataset.action;
+        if (action === 'remove-winner') {
+            const winnerId = button.dataset.winnerId;
+            const songTitle = button.dataset.songTitle;
+
+            const modalTitle = confirmModal.querySelector('.modal-title');
+            const modalBody = confirmModal.querySelector('.modal-body');
+            const confirmActionBtn = confirmModal.querySelector('#confirmActionBtn');
+
+            modalTitle.textContent = 'Remove Winner';
+            modalBody.innerHTML = `Are you sure you want to remove "<strong>${songTitle}</strong>" from the winners list?`;
+            
+            confirmActionBtn.onclick = () => {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.innerHTML = `
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="remove_winner">
+                    <input type="hidden" name="winner_id" value="${winnerId}">
+                `;
+                document.body.appendChild(form);
+                form.submit();
+            };
+        }
+    });
+}
+</script>
+{% endblock %}

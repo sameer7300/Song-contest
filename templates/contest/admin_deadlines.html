@@ -1,0 +1,437 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin - Contest Deadlines{% endblock %}
+
+{% block extra_css %}
+<style>
+    .deadline-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+    }
+    
+    .deadline-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    .deadline-status {
+        font-weight: 600;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-active {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+    }
+    
+    .status-upcoming {
+        background: linear-gradient(135deg, #ffc107, #fd7e14);
+        color: white;
+    }
+    
+    .status-past {
+        background: linear-gradient(135deg, #6c757d, #495057);
+        color: white;
+    }
+    
+    .deadline-form {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+    
+    .btn-gradient {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        border: none;
+        color: white;
+        font-weight: 600;
+        padding: 12px 30px;
+        border-radius: 25px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-gradient:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        color: white;
+    }
+    
+    .countdown-timer {
+        font-family: 'Courier New', monospace;
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: var(--primary-color);
+    }
+    
+    .admin-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        padding: 30px 0;
+        margin-bottom: 30px;
+        border-radius: 0 0 30px 30px;
+    }
+    
+    .deadline-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .deadline-actions .btn {
+        border-radius: 20px;
+        padding: 8px 16px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    
+    .time-remaining {
+        font-size: 0.9rem;
+        color: #666;
+        margin-top: 5px;
+    }
+    
+    .deadline-description {
+        color: #666;
+        font-size: 0.9rem;
+        margin-top: 10px;
+        line-height: 1.4;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-2">
+                    <i class="fas fa-clock me-3"></i>Contest Deadlines
+                </h1>
+                <p class="mb-0 opacity-75">Manage contest phases and important dates</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <button class="btn btn-light btn-lg" data-bs-toggle="modal" data-bs-target="#addDeadlineModal">
+                    <i class="fas fa-plus me-2"></i>Add Deadline
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Current Contest Status -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="deadline-card card">
+                <div class="card-body text-center py-4">
+                    <h4 class="mb-3">Current Contest Status</h4>
+                    {% if current_phase %}
+                        <div class="deadline-status status-active mb-3">
+                            {{ current_phase.name }}
+                        </div>
+                        <p class="mb-2">{{ current_phase.description }}</p>
+                        {% if current_phase.end_date %}
+                            <div class="countdown-timer" id="currentPhaseCountdown" data-end-date="{{ current_phase.end_date|date:'c' }}">
+                                Loading...
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="deadline-status status-past mb-3">
+                            Contest Not Active
+                        </div>
+                        <p class="text-muted">No active contest phase at this time.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Deadlines List -->
+    <div class="row">
+        {% for deadline in deadlines %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="deadline-card card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h5 class="card-title mb-0">{{ deadline.name }}</h5>
+                            <span class="deadline-status status-{{ deadline.status }}">
+                                {{ deadline.get_status_display }}
+                            </span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-calendar-alt me-2 text-primary"></i>
+                                <strong>Start:</strong>
+                                <span class="ms-2">{{ deadline.start_date|date:"M d, Y g:i A" }}</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-calendar-check me-2 text-danger"></i>
+                                <strong>End:</strong>
+                                <span class="ms-2">{{ deadline.end_date|date:"M d, Y g:i A" }}</span>
+                            </div>
+                        </div>
+                        
+                        {% if deadline.description %}
+                            <p class="deadline-description">{{ deadline.description }}</p>
+                        {% endif %}
+                        
+                        {% if deadline.status == 'active' or deadline.status == 'upcoming' %}
+                            <div class="time-remaining">
+                                <i class="fas fa-hourglass-half me-1"></i>
+                                <span class="countdown-timer" data-end-date="{{ deadline.end_date|date:'c' }}">
+                                    Loading...
+                                </span>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="deadline-actions mt-3">
+                            <button class="btn btn-outline-primary btn-sm"
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#addDeadlineModal"
+                                    data-id="{{ deadline.id }}"
+                                    data-name="{{ deadline.name|escapejs }}"
+                                    data-start="{{ deadline.start_date|date:'Y-m-d\TH:i' }}"
+                                    data-end="{{ deadline.end_date|date:'Y-m-d\TH:i' }}"
+                                    data-description="{{ deadline.description|escapejs }}">
+                                <i class="fas fa-edit me-1"></i>Edit
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" 
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#deleteModal"
+                                    data-id="{{ deadline.id }}"
+                                    data-name="{{ deadline.name|escapejs }}">
+                                <i class="fas fa-trash me-1"></i>Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="fas fa-clock fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">No Deadlines Set</h4>
+                    <p class="text-muted">Add your first contest deadline to get started.</p>
+                    <button class="btn btn-gradient" data-bs-toggle="modal" data-bs-target="#addDeadlineModal">
+                        <i class="fas fa-plus me-2"></i>Add First Deadline
+                    </button>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Add/Edit Deadline Modal -->
+<div class="modal fade" id="addDeadlineModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Add New Deadline</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" id="deadlineForm">
+                {% csrf_token %}
+                <input type="hidden" id="deadlineId" name="deadline_id">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="deadlineName" class="form-label">Deadline Name *</label>
+                            <input type="text" class="form-control" id="deadlineName" name="name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="deadlineType" class="form-label">Type</label>
+                            <select class="form-select" id="deadlineType" name="type">
+                                <option value="submission">Submission Phase</option>
+                                <option value="voting">Voting Phase</option>
+                                <option value="judging">Judging Phase</option>
+                                <option value="results">Results Announcement</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="startDate" class="form-label">Start Date & Time *</label>
+                            <input type="datetime-local" class="form-control" id="startDate" name="start_date" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="endDate" class="form-label">End Date & Time *</label>
+                            <input type="datetime-local" class="form-control" id="endDate" name="end_date" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3" 
+                                  placeholder="Optional description of this deadline..."></textarea>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="sendNotification" name="send_notification" checked>
+                        <label class="form-check-label" for="sendNotification">
+                            Send email notifications to users about this deadline
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-gradient">
+                        <i class="fas fa-save me-2"></i>Save Deadline
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the deadline "<span id="deleteDeadlineName"></span>"?</p>
+                <p class="text-muted small">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <input type="hidden" id="deleteDeadlineId" name="delete_deadline_id">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize countdown timers
+    updateCountdowns();
+    setInterval(updateCountdowns, 1000);
+    
+    // Form validation
+    const form = document.getElementById('deadlineForm');
+    form.addEventListener('submit', function(e) {
+        const startDate = new Date(document.getElementById('startDate').value);
+        const endDate = new Date(document.getElementById('endDate').value);
+        
+        if (endDate <= startDate) {
+            e.preventDefault();
+            alert('End date must be after start date.');
+            return false;
+        }
+    });
+});
+
+function updateCountdowns() {
+    const countdowns = document.querySelectorAll('.countdown-timer[data-end-date]');
+    
+    countdowns.forEach(function(countdown) {
+        const endDate = new Date(countdown.dataset.endDate);
+        const now = new Date();
+        const timeDiff = endDate - now;
+        
+        if (timeDiff <= 0) {
+            countdown.textContent = 'Expired';
+            countdown.classList.add('text-danger');
+            return;
+        }
+        
+        const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+        
+        let timeString = '';
+        if (days > 0) {
+            timeString += days + 'd ';
+        }
+        if (hours > 0 || days > 0) {
+            timeString += hours + 'h ';
+        }
+        if (minutes > 0 || hours > 0 || days > 0) {
+            timeString += minutes + 'm ';
+        }
+        timeString += seconds + 's';
+        
+        countdown.textContent = timeString;
+        
+        // Color coding based on time remaining
+        if (timeDiff < 24 * 60 * 60 * 1000) { // Less than 24 hours
+            countdown.classList.add('text-danger');
+        } else if (timeDiff < 7 * 24 * 60 * 60 * 1000) { // Less than 7 days
+            countdown.classList.add('text-warning');
+        } else {
+            countdown.classList.add('text-success');
+        }
+    });
+}
+
+document.getElementById('addDeadlineModal').addEventListener('show.bs.modal', function(event) {
+    const button = event.relatedTarget;
+    const id = button.dataset.id;
+
+    if (id) { // If id exists, it's an edit
+        document.getElementById('modalTitle').textContent = 'Edit Deadline';
+        document.getElementById('deadlineId').value = id;
+        document.getElementById('deadlineName').value = button.dataset.name;
+        document.getElementById('startDate').value = button.dataset.start;
+        document.getElementById('endDate').value = button.dataset.end;
+        document.getElementById('description').value = button.dataset.description;
+    }
+});
+
+document.getElementById('deleteModal').addEventListener('show.bs.modal', function(event) {
+    const button = event.relatedTarget;
+    const id = button.dataset.id;
+    const name = button.dataset.name;
+
+    document.getElementById('deleteDeadlineName').textContent = name;
+    document.getElementById('deleteDeadlineId').value = id;
+});
+
+// Reset form when modal is closed
+document.getElementById('addDeadlineModal').addEventListener('hidden.bs.modal', function() {
+    document.getElementById('modalTitle').textContent = 'Add New Deadline';
+    document.getElementById('deadlineForm').reset();
+    document.getElementById('deadlineId').value = '';
+});
+</script>
+{% endblock %}

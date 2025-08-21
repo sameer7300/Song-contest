@@ -1,0 +1,367 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section position-relative">
+    <div class="container position-relative">
+        <div class="row align-items-center">
+            <div class="col-lg-8 fade-in-up">
+                <h1 class="display-3 fw-bold mb-4 gradient-text">National AI Song Contest</h1>
+                <h2 class="h2 mb-4 text-white-50">"Voices for Humanity" , "Stop Killer Robots"</h2>
+                <p class="lead mb-5 text-white-75">
+                    Create powerful original songs using AI music tools to call for a global ban on 
+                    Autonomous Weapons Systems (AWS).
+                </p>
+                <div class="d-flex flex-wrap gap-3">
+                    {% if not user.is_authenticated %}
+                    <a href="{% url 'accounts:signup' %}" class="btn btn-light btn-lg hover-lift">
+                        <i class="fas fa-user-plus me-2"></i>Join Contest
+                    </a>
+                    {% else %}
+                        {% if can_submit_songs %}
+                        <a href="{% url 'contest:upload_song' %}" class="btn btn-light btn-lg hover-lift">
+                            <i class="fas fa-upload me-2"></i>Upload Your Song
+                        </a>
+                        {% else %}
+                        <button class="btn btn-secondary btn-lg" disabled>
+                            <i class="fas fa-clock me-2"></i>
+                            {% if current_phase.status == 'judging' %}
+                                Judging in Progress
+                            {% elif current_phase.status == 'winner_announced' %}
+                                Winners Announced
+                            {% else %}
+                                Submissions Closed
+                            {% endif %}
+                        </button>
+                        {% endif %}
+                    {% endif %}
+                    <a href="{% url 'contest:winners' %}" class="btn btn-outline-light btn-lg hover-lift">
+                        <i class="fas fa-trophy me-2"></i>View Winners
+                    </a>
+                    <a href="{% url 'contest:browse_songs' %}" class="btn btn-outline-light btn-lg hover-lift">
+                        <i class="fas fa-headphones me-2"></i>Listen Now
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-4 text-center">
+                <div class="floating spado-hero-logo">
+                    <img src="{% static 'spado-logo.png' %}" alt="SPADO Logo" class="spado-glow">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Contest Status Banner integrated into Hero -->
+        {% if current_phase %}
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="deadline-banner {% if current_phase.status == 'open_for_submission' %}deadline-open{% elif current_phase.status == 'judging' %}deadline-judging{% else %}deadline-results{% endif %}">
+                    <div class="deadline-content">
+                        <div class="deadline-icon">
+                            {% if current_phase.status == 'open_for_submission' %}
+                                <i class="fas fa-upload"></i>
+                            {% elif current_phase.status == 'judging' %}
+                                <i class="fas fa-gavel"></i>
+                            {% else %}
+                                <i class="fas fa-trophy"></i>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="deadline-info">
+                            <div class="deadline-status">
+                                <span class="status-badge {% if current_phase.status == 'open_for_submission' %}status-open{% elif current_phase.status == 'judging' %}status-judging{% else %}status-results{% endif %}">
+                                    <i class="fas fa-circle me-2"></i>
+                                    {{ current_phase.get_status_display }}
+                                </span>
+                            </div>
+                            
+                            <h2 class="deadline-phase">
+                                {% if current_phase.status == 'open_for_submission' %}
+                                    🎵 Submit Your Songs Now!
+                                {% elif current_phase.status == 'judging' %}
+                                    ⚖️ Judging in Progress
+                                {% else %}
+                                    🏆 Winners Announced!
+                                {% endif %}
+                            </h2>
+                            
+                            {% if current_phase.is_active %}
+                                <div class="deadline-time">
+                                    <div class="time-label">Time Remaining</div>
+                                    <div class="time-value">
+                                        {% if current_phase.time_remaining %}
+                                            <span class="time-unit">
+                                                <strong>{{ current_phase.time_remaining.days }}</strong>
+                                                <small>days</small>
+                                            </span>
+                                            <span class="time-separator">:</span>
+                                            <span class="time-unit">
+                                                {% with hours=current_phase.time_remaining.seconds|floatformat:0 %}
+                                                    <strong>{% widthratio hours 3600 1 %}</strong>
+                                                {% endwith %}
+                                                <small>hours</small>
+                                            </span>
+                                        {% else %}
+                                            <span class="text-warning">⏰ Deadline approaching!</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="deadline-date">
+                                        <i class="fas fa-calendar-alt me-2"></i>
+                                        Ends: {{ current_phase.deadline_date|date:"F d, Y \a\t g:i A" }}
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="deadline-time">
+                                    <div class="time-value text-warning">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        This phase has ended
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                            {% if current_phase.description %}
+                                <div class="deadline-description">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    {{ current_phase.description }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="deadline-action">
+                            {% if current_phase.status == 'open_for_submission' and can_submit_songs %}
+                                <a href="{% url 'contest:upload_song' %}" class="btn-deadline-action">
+                                    <i class="fas fa-plus-circle me-2"></i>
+                                    Upload Song
+                                </a>
+                            {% elif current_phase.status == 'judging' %}
+                                <a href="{% url 'contest:browse_songs' %}" class="btn-deadline-action">
+                                    <i class="fas fa-headphones me-2"></i>
+                                    Browse Songs
+                                </a>
+                            {% else %}
+                                <a href="{% url 'contest:winners' %}" class="btn-deadline-action">
+                                    <i class="fas fa-trophy me-2"></i>
+                                    View Winners
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Progress Bar -->
+                    <div class="deadline-progress">
+                        <div class="progress-bar {% if current_phase.is_active %}progress-active{% else %}progress-expired{% endif %}"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Contest Stats -->
+<section class="py-5" style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);">
+    <div class="container">
+        <div class="row text-center g-4">
+            <div class="col-md-4">
+                <div class="card h-100 hover-lift glassmorphism">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <i class="fas fa-music text-gradient mb-3" style="font-size: 3.5rem;"></i>
+                        </div>
+                        <h3 class="card-title display-6 fw-bold text-gradient">{{ total_submissions }}</h3>
+                        <p class="card-text text-muted fw-semibold">Total Submissions</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 hover-lift glassmorphism">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <i class="fas fa-users text-gradient mb-3" style="font-size: 3.5rem;"></i>
+                        </div>
+                        <h3 class="card-title display-6 fw-bold text-gradient">{{ total_participants }}</h3>
+                        <p class="card-text text-muted fw-semibold">Participants</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 hover-lift glassmorphism">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <i class="fas fa-trophy text-gradient mb-3" style="font-size: 3.5rem;"></i>
+                        </div>
+                        <h3 class="card-title display-6 fw-bold text-gradient">{{ winners.count }}</h3>
+                        <p class="card-text text-muted fw-semibold">Winners Selected</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Recent Winners -->
+{% if winners %}
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center mb-5 fade-in-up">
+            <i class="fas fa-crown text-warning me-2 floating"></i>
+            <span class="text-gradient">Recent Winners</span>
+        </h2>
+        <div class="row g-4">
+            {% for winner in winners %}
+            <div class="col-lg-4 mb-4">
+                <div class="card hover-lift glassmorphism">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <span class="winner-badge">
+                                <i class="fas fa-trophy me-1"></i>Winner
+                            </span>
+                            <small class="text-muted">{{ winner.selected_at|date:"M d, Y" }}</small>
+                        </div>
+                        <h5 class="card-title text-gradient">{{ winner.song.title }}</h5>
+                        <p class="card-text">
+                            <strong>Artist:</strong> {{ winner.song.user.username }}<br>
+                            <strong>Language:</strong> {{ winner.song.get_language_display }}<br>
+                            <strong>AI Tool:</strong> {{ winner.song.ai_tool_used }}
+                        </p>
+                        <a href="{% url 'contest:song_detail' winner.song.id %}" class="btn btn-primary btn-sm hover-lift">
+                            <i class="fas fa-eye me-1"></i>View Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="text-center">
+            <a href="{% url 'contest:winners' %}" class="btn btn-outline-primary btn-lg hover-lift">
+                <i class="fas fa-trophy me-2"></i>View All Winners
+            </a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Contest Rules -->
+<section class="py-5" style="background: linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%);">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="card hover-lift glassmorphism h-100">
+                    <div class="card-body">
+                        <h2 class="mb-4 text-gradient">
+                            <i class="fas fa-list-check me-2"></i>Rules & Guidelines
+                        </h2>
+                        <div class="list-group list-group-flush">
+                            <div class="list-group-item border-0 bg-transparent">
+                                <i class="fas fa-robot text-primary me-3"></i>
+                                <strong>Must be produced using any AI music tool</strong><br>
+                                <small class="text-muted">Suno AI, Boomy, Soundraw, AIVA, etc.</small>
+                            </div>
+                            <div class="list-group-item border-0 bg-transparent">
+                                <i class="fas fa-language text-primary me-3"></i>
+                                <strong>Lyrics must be original and in Urdu or English</strong><br>
+                                <small class="text-muted">No plagiarism allowed</small>
+                            </div>
+                            <div class="list-group-item border-0 bg-transparent">
+                                <i class="fas fa-clock text-primary me-3"></i>
+                                <strong>Song length: 1 to 3 minutes</strong><br>
+                                <small class="text-muted">Perfect for social media sharing</small>
+                            </div>
+                            <div class="list-group-item border-0 bg-transparent">
+                                <i class="fas fa-file-audio text-primary me-3"></i>
+                                <strong>Submit audio + lyrics files</strong><br>
+                                <small class="text-muted">.mp3/.wav + .txt/.pdf/.doc/.docx</small>
+                            </div>
+                            <div class="list-group-item border-0 bg-transparent">
+                                <i class="fas fa-flag text-primary me-3"></i>
+                                <strong>Open to all residents of Pakistan</strong><br>
+                                <small class="text-muted">No age limit</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card hover-lift glassmorphism h-100">
+                    <div class="card-body">
+                        <h2 class="mb-4 text-gradient">
+                            <i class="fas fa-gift me-2"></i>Prizes & Recognition
+                        </h2>
+                        <div class="mb-4">
+                            <h5 class="text-primary mb-3">🏆 Winner Benefits</h5>
+                            <div class="list-group list-group-flush">
+                                <div class="list-group-item border-0 bg-transparent">
+                                    <i class="fas fa-music text-success me-2"></i>Official Campaign Anthem for 3 months
+                                </div>
+                                <div class="list-group-item border-0 bg-transparent">
+                                    <i class="fas fa-bullhorn text-success me-2"></i>Nationwide promotion through SPADO & KRC
+                                </div>
+                                <div class="list-group-item border-0 bg-transparent">
+                                    <i class="fas fa-certificate text-success me-2"></i>Certificate of Achievement
+                                </div>
+                                <div class="list-group-item border-0 bg-transparent">
+                                    <i class="fas fa-star text-success me-2"></i>Featured at Digital Launch Event
+                                </div>
+                            </div>
+                        </div>
+                        <hr>
+                        <div>
+                            <h6 class="text-muted mb-3">🎖️ All Participants</h6>
+                            <p class="mb-0">
+                                <i class="fas fa-award text-info me-2"></i>
+                                Certificate of Participation
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Theme Section -->
+<!-- Theme Section -->
+<section class="py-5" style="background: var(--gradient-secondary);">
+    <div class="container text-center">
+        <h2 class="mb-5 text-white fade-in-up">
+            <i class="fas fa-heart me-2 floating"></i>Contest Themes
+        </h2>
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card hover-lift glassmorphism border-0">
+                    <div class="card-body p-5">
+                        <div class="theme-list mb-4">
+                            <div class="theme-item mb-3 d-flex align-items-center">
+                                <i class="fas fa-circle text-gradient me-3" style="font-size: 0.8rem;"></i>
+                                <span class="h4 mb-0 text-gradient fw-bold">Ban Autonomous Weapons Systems (AWS)</span>
+                            </div>
+                            <div class="theme-item mb-3 d-flex align-items-center">
+                                <i class="fas fa-circle text-gradient me-3" style="font-size: 0.8rem;"></i>
+                                <span class="h4 mb-0 text-gradient fw-bold">AI should serve humanity, not kill.</span>
+                            </div>
+                            <div class="theme-item mb-3 d-flex align-items-center">
+                                <i class="fas fa-circle text-gradient me-3" style="font-size: 0.8rem;"></i>
+                                <span class="h4 mb-0 text-gradient fw-bold fst-italic">Stop dehumanization.</span>
+                            </div>
+                        </div>
+                        <p class="card-text fs-5 mt-4">
+                            Use your voice and creativity to advocate for peace and the responsible use of AI technology.
+                        </p>
+                        <div class="mt-4">
+                            <span class="badge bg-warning text-dark me-2 p-2">
+                                <i class="fas fa-peace me-1"></i>Peace
+                            </span>
+                            <span class="badge bg-info text-white me-2 p-2">
+                                <i class="fas fa-robot me-1"></i>Responsible AI
+                            </span>
+                            <span class="badge bg-success text-white p-2">
+                                <i class="fas fa-heart me-1"></i>Humanity
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+
+{% block title %}Email Verification - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-envelope-open-text fa-3x text-primary mb-3"></i>
+                        <h2 class="card-title">Email Verification</h2>
+                        <p class="text-muted">We've sent a verification code to:</p>
+                        <strong>{{ email }}</strong>
+                    </div>
+
+                    <form method="post" id="verificationForm">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label for="{{ form.code.id_for_label }}" class="form-label">Verification Code</label>
+                            {{ form.code }}
+                            {% if form.code.help_text %}
+                                <div class="form-text">{{ form.code.help_text }}</div>
+                            {% endif %}
+                            {% if form.code.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.code.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-grid mb-3">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-check me-2"></i>Verify Email
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="text-center">
+                        <p class="text-muted mb-2">Didn't receive the code?</p>
+                        <button type="button" class="btn btn-outline-secondary" id="resendBtn">
+                            <i class="fas fa-redo me-2"></i>Resend Code
+                        </button>
+                        <div id="resendMessage" class="mt-2"></div>
+                    </div>
+
+                    {% if time_remaining > 0 %}
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-clock me-2"></i>
+                        Code expires in <span id="timeRemaining">{{ time_remaining }}</span> minute(s)
+                    </div>
+                    {% endif %}
+
+                    <div class="text-center mt-4">
+                        <small class="text-muted">
+                            Having trouble? <a href="mailto:{{ settings.ADMIN_EMAIL }}">Contact Support</a>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const resendBtn = document.getElementById('resendBtn');
+    const resendMessage = document.getElementById('resendMessage');
+    const timeRemainingSpan = document.getElementById('timeRemaining');
+    let timeRemaining = {{ time_remaining }};
+    
+    // Countdown timer
+    if (timeRemaining > 0) {
+        const timer = setInterval(function() {
+            timeRemaining--;
+            if (timeRemainingSpan) {
+                timeRemainingSpan.textContent = timeRemaining;
+            }
+            
+            if (timeRemaining <= 0) {
+                clearInterval(timer);
+                const alertDiv = document.querySelector('.alert-info');
+                if (alertDiv) {
+                    alertDiv.className = 'alert alert-warning mt-3';
+                    alertDiv.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Code has expired. Please request a new one.';
+                }
+            }
+        }, 60000); // Update every minute
+    }
+    
+    // Resend code functionality
+    resendBtn.addEventListener('click', function() {
+        resendBtn.disabled = true;
+        resendBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Sending...';
+        
+        fetch('{% url "email_verification:resend_code" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                resendMessage.innerHTML = '<div class="alert alert-success py-2">' + data.message + '</div>';
+                // Reset timer
+                timeRemaining = 15;
+                if (timeRemainingSpan) {
+                    timeRemainingSpan.textContent = timeRemaining;
+                }
+            } else {
+                resendMessage.innerHTML = '<div class="alert alert-danger py-2">' + data.message + '</div>';
+            }
+        })
+        .catch(error => {
+            resendMessage.innerHTML = '<div class="alert alert-danger py-2">Failed to resend code. Please try again.</div>';
+        })
+        .finally(() => {
+            resendBtn.disabled = false;
+            resendBtn.innerHTML = '<i class="fas fa-redo me-2"></i>Resend Code';
+        });
+    });
+    
+    // Auto-focus on code input
+    const codeInput = document.getElementById('{{ form.code.id_for_label }}');
+    if (codeInput) {
+        codeInput.focus();
+        
+        // Auto-submit when 6 digits are entered
+        codeInput.addEventListener('input', function() {
+            if (this.value.length === 6 && /^\d{6}$/.test(this.value)) {
+                document.getElementById('verificationForm').submit();
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
