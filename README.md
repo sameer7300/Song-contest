@@ -1,4 +1,4 @@
-# 🎵 AI Song Contest Platform
+# 🎵 AI Song Contest Platform - Powered by SPADO
 
 <div align="center">
 
@@ -17,7 +17,7 @@
 
 ## 🌟 Overview
 
-The AI Song Contest Platform is a comprehensive web application designed to host music competitions where participants create original songs using AI music generation tools. The platform focuses on raising awareness about the humanitarian impact of Autonomous Weapons Systems and advocates for their global prohibition.
+The AI Song Contest Platform is a comprehensive web application designed to host music competitions where participants create original songs using AI music generation tools. The platform is organized by SPADO focuses on raising awareness about the humanitarian impact of Autonomous Weapons Systems and advocates for their global prohibition.
 
 ## ✨ Key Features
 
