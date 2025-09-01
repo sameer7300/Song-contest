@@ -1,73 +1,109 @@
-# Contributing to AI Song Contest
+# 🤝 Contributing to AI Song Contest Platform
 
 Thank you for your interest in contributing to the AI Song Contest platform! We welcome all contributions from the community.
 
-## Getting Started
+## 🌟 Ways to Contribute
 
-1. Fork the repository on GitHub
-2. Clone your fork locally
-3. Set up the development environment (see README.md for instructions)
-4. Create a new branch for your changes
+- 🐛 Report bugs and issues
+- ✨ Suggest new features
+- 💻 Submit code improvements
+- 📚 Improve documentation
+- 🧪 Write tests
+- 🎨 Enhance UI/UX
 
-## Development Workflow
+## 🚀 Getting Started
 
-1. Create a new branch for your feature or bugfix:
-   ```bash
-   git checkout -b feature/your-feature-name
-   # or
-   git checkout -b fix/issue-number-description
-   ```
+### 1. Fork and Clone
+```bash
+# Fork the repository on GitHub
+git clone https://github.com/yourusername/ai-song-contest.git
+cd ai-song-contest
+git remote add upstream https://github.com/original/ai-song-contest.git
+```
 
-2. Make your changes and write tests if applicable
+### 2. Development Setup
+```bash
+# Create virtual environment
+python -m venv venv
+venv\Scripts\activate  # Windows
+# source venv/bin/activate  # macOS/Linux
 
-3. Run the test suite:
-   ```bash
-   python manage.py test
-   ```
+# Install dependencies
+pip install -r requirements.txt
 
-4. Ensure your code follows the project's style guidelines
+# Setup environment
+cp .env.example .env
+# Edit .env with your settings
 
-5. Commit your changes with a descriptive commit message:
-   ```bash
-   git commit -m "Add: New feature description"
-   ```
+# Database setup
+python manage.py migrate
+python manage.py createsuperuser
+```
 
-6. Push your changes to your fork:
-   ```bash
-   git push origin your-branch-name
-   ```
+## 📋 Development Guidelines
 
-7. Open a pull request against the main branch
+### Code Style
+- **Follow PEP 8** Python style guidelines
+- **Use Black** for formatting: `black .`
+- **Use isort** for imports: `isort .`
+- **Run flake8** for linting: `flake8 .`
+- **Maximum line length**: 88 characters
 
-## Code Style
+### Django Best Practices
+- Use class-based views where appropriate
+- Follow Django naming conventions
+- Implement proper error handling
+- Use Django's security features
+- Write comprehensive tests
 
-- Follow [PEP 8](https://www.python.org/dev/peps/pep-0008/) for Python code
-- Use 4 spaces for indentation
-- Keep lines under 88 characters
-- Use docstrings for all public modules, functions, and classes
-- Write meaningful commit messages
+### Testing
+```bash
+# Run tests
+python manage.py test
 
-## Pull Request Guidelines
+# With coverage
+coverage run --source='.' manage.py test
+coverage report
+```
 
-- Keep pull requests focused on a single feature or bugfix
-- Include tests for new features
-- Update documentation as needed
-- Ensure all tests pass
-- Reference any related issues
+## 🔄 Workflow Process
 
-## Reporting Issues
+1. **Create branch**: `git checkout -b feature/your-feature`
+2. **Make changes** with descriptive commits
+3. **Test thoroughly** and ensure code quality
+4. **Update documentation** if needed
+5. **Submit pull request** with clear description
 
-When reporting issues, please include:
-- A clear description of the problem
-- Steps to reproduce the issue
-- Expected vs. actual behavior
-- Any relevant error messages
-- Your environment (OS, Python version, etc.)
+## 📝 Commit Guidelines
 
-## Code of Conduct
+### Format
+```
+type(scope): description
 
-Please note that this project is released with a Contributor Code of Conduct. By participating in this project you agree to abide by its terms.
+[optional body]
+```
 
-## License
+### Types
+- **feat**: New feature
+- **fix**: Bug fix  
+- **docs**: Documentation
+- **style**: Formatting
+- **refactor**: Code restructuring
+- **test**: Adding tests
+- **chore**: Maintenance
 
-By contributing, you agree that your contributions will be licensed under the project's MIT License.
+## 🤝 Code of Conduct
+
+- Be respectful and inclusive
+- Provide constructive feedback
+- Help newcomers learn
+- Focus on project goals
+
+## 📞 Support
+
+- **GitHub Issues**: Bug reports and features
+- **Email**: [info@spado.org.pk](mailto:info@spado.org.pk)
+
+## 📄 License
+
+By contributing, you agree that your contributions will be licensed under the MIT License.
